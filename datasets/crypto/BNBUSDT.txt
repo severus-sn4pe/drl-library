@@ -1,0 +1,3 @@
+https://mrcrabs.ch/rl/crypto/BNBUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/BNBUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/BNBUSDT_1d.csv

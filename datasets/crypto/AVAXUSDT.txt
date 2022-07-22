@@ -1,0 +1,3 @@
+https://mrcrabs.ch/rl/crypto/AVAXUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/AVAXUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/AVAXUSDT_1d.csv

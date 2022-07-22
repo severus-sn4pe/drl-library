@@ -1,0 +1,3 @@
+https://mrcrabs.ch/rl/crypto/SOLUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/SOLUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/SOLUSDT_1d.csv

@@ -1,0 +1,3 @@
+https://mrcrabs.ch/rl/crypto/XRPUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/XRPUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/XRPUSDT_1d.csv

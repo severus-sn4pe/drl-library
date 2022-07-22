@@ -1,0 +1,3 @@
+https://mrcrabs.ch/rl/crypto/ETHUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/ETHUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/ETHUSDT_1d.csv

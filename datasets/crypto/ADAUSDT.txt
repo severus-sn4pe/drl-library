@@ -1,0 +1,3 @@
+https://mrcrabs.ch/rl/crypto/ADAUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/ADAUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/ADAUSDT_1d.csv
