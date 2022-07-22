@@ -19,7 +19,7 @@ except FileNotFoundError:
 
 setup(
     name="drl",
-    version="0.0.4",
+    version="0.0.5",
     include_package_data=True,
     author="Renold Christian",
     author_email="christian.renold@hslu.ch",

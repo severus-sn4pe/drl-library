@@ -2,8 +2,8 @@ import datetime
 
 import pandas as pd
 
-from config import stocks
 from config import general as config
+from config import stocks
 from finrl.agents.stablebaselines3.drl_ensemble_agent import DRLEnsembleAgent
 from finrl.plot import backtest_stats, backtest_plot, get_baseline
 from lib.drl import load_dataset
