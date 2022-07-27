@@ -1,0 +1,4 @@
+https://mrcrabs.ch/rl/crypto/XLMUSDT_1d.csv
+https://mrcrabs.ch/rl/crypto/XLMUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/XLMUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/XLMUSDT_1min.csv

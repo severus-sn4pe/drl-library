@@ -1,0 +1,4 @@
+https://mrcrabs.ch/rl/crypto/LINKUSDT_1d.csv
+https://mrcrabs.ch/rl/crypto/LINKUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/LINKUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/LINKUSDT_1min.csv

@@ -1,0 +1,4 @@
+https://mrcrabs.ch/rl/crypto/LTCUSDT_1d.csv
+https://mrcrabs.ch/rl/crypto/LTCUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/LTCUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/LTCUSDT_1min.csv

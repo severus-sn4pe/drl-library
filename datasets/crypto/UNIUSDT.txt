@@ -1,3 +1,4 @@
-https://mrcrabs.ch/rl/crypto/UNIUSDT_5min.csv
-https://mrcrabs.ch/rl/crypto/UNIUSDT_1h.csv
 https://mrcrabs.ch/rl/crypto/UNIUSDT_1d.csv
+https://mrcrabs.ch/rl/crypto/UNIUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/UNIUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/UNIUSDT_1min.csv

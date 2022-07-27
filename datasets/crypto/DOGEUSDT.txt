@@ -1,3 +1,4 @@
-https://mrcrabs.ch/rl/crypto/DOGEUSDT_5min.csv
-https://mrcrabs.ch/rl/crypto/DOGEUSDT_1h.csv
 https://mrcrabs.ch/rl/crypto/DOGEUSDT_1d.csv
+https://mrcrabs.ch/rl/crypto/DOGEUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/DOGEUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/DOGEUSDT_1min.csv

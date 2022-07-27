@@ -1,0 +1,4 @@
+https://mrcrabs.ch/rl/crypto/TRXUSDT_1d.csv
+https://mrcrabs.ch/rl/crypto/TRXUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/TRXUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/TRXUSDT_1min.csv

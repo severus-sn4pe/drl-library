@@ -1,0 +1,4 @@
+https://mrcrabs.ch/rl/crypto/NEARUSDT_1d.csv
+https://mrcrabs.ch/rl/crypto/NEARUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/NEARUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/NEARUSDT_1min.csv

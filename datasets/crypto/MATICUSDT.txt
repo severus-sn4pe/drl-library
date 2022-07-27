@@ -1,0 +1,4 @@
+https://mrcrabs.ch/rl/crypto/MATICUSDT_1d.csv
+https://mrcrabs.ch/rl/crypto/MATICUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/MATICUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/MATICUSDT_1min.csv

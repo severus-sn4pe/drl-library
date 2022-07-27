@@ -1,0 +1,4 @@
+https://mrcrabs.ch/rl/crypto/MANAUSDT_1d.csv
+https://mrcrabs.ch/rl/crypto/MANAUSDT_1h.csv
+https://mrcrabs.ch/rl/crypto/MANAUSDT_5min.csv
+https://mrcrabs.ch/rl/crypto/MANAUSDT_1min.csv
