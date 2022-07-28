@@ -1,4 +1,3 @@
 https://mrcrabs.ch/rl/crypto/BTCUSDT_1d.csv
 https://mrcrabs.ch/rl/crypto/BTCUSDT_1h.csv
 https://mrcrabs.ch/rl/crypto/BTCUSDT_5min.csv
-https://mrcrabs.ch/rl/crypto/BTCUSDT_1min.csv
