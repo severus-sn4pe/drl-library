@@ -1,3 +1,0 @@
-https://mrcrabs.ch/rl/crypto/crypto_1h.csv
-https://mrcrabs.ch/rl/crypto/crypto_1d.csv
-https://mrcrabs.ch/rl/crypto/crypto_5min.csv

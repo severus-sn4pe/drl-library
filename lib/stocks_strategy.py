@@ -16,8 +16,8 @@ MODELS = {"A2C": A2C, "DDPG": DDPG, "TD3": TD3, "SAC": SAC, "PPO": PPO}
 
 class StocksStrategy:
 
-    def __init__(self, model_name, root_dir, results_dir, trained_model_dir):
-        self.prefix = "stocks"
+    def __init__(self, model_name, root_dir, results_dir, trained_model_dir, prefix='stocks'):
+        self.prefix = prefix
         self.root_dir = root_dir
         self.results_dir = results_dir
         self.trained_model_dir = trained_model_dir

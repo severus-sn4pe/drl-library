@@ -133,9 +133,8 @@ class StockTradingEnv(gym.Env):
 
     def _buy_stock(self, index, action):
         def _do_buy():
-            if (
-                    self.state[index + 2 * self.stock_dim + 1] != True
-            ):  # check if the stock is able to buy
+            if (self.state[index + 2 * self.stock_dim + 1] != True):
+                # check if the stock is able to buy
                 # if self.state[index + 1] >0:
                 # Buy only if the price is > 0 (no missing data in this particular date)
 

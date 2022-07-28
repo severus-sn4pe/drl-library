@@ -48,7 +48,7 @@ train_start = '2018-04-01'
 train_end = '2021-11-01'
 # val_test_start = '2021-04-01'
 val_test_start = '2021-11-01'
-val_test_end = '2022-06-01'
+val_test_end = '2022-07-01'
 
 ensemble_agent = DRLEnsembleAgent(df=processed_full,
                                   train_period=(train_start, train_end),

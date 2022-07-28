@@ -1,9 +1,9 @@
 from finrl.meta.data_processor import DataProcessor
 
 
-def load_dataset(filename, indicators, use_turbulence=False, use_vix=False):
+def load_dataset(filename, indicators, use_turbulence=False, use_vix=False, time_interval='1d'):
     dp = DataProcessor("file", filename=filename)
-    df = dp.download_data([], '', '', '1d')
+    df = dp.download_data([], '', '', time_interval)
     df = dp.clean_data(df)
     if len(indicators) > 0:
         df = dp.add_technical_indicator(df, indicators)

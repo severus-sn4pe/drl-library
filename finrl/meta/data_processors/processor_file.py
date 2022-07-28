@@ -44,7 +44,7 @@ class FileProcessor:
 
         data = df
         list_ticker = data["tic"].unique().tolist()
-        list_date = list(pd.date_range(data['date'].min(), data['date'].max()).astype(str))
+        list_date = list(pd.date_range(data['date'].min(), data['date'].max(), freq=self.time_interval).astype(str))
         combination = list(itertools.product(list_date, list_ticker))
 
         processed_full = pd.DataFrame(combination, columns=["date", "tic"]).merge(data, on=["date", "tic"], how="left")
@@ -71,6 +71,7 @@ class FileProcessor:
         unique_ticker = stock.tic.unique()
 
         for indicator in tech_indicator_list:
+            print(f"adding {indicator}")
             indicator_df = pd.DataFrame()
             for i in range(len(unique_ticker)):
                 try:
