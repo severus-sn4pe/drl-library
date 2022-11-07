@@ -1,4 +1,0 @@
-https://mrcrabs.ch/rl/crypto/DOTUSDT_1d.csv
-https://mrcrabs.ch/rl/crypto/DOTUSDT_1h.csv
-https://mrcrabs.ch/rl/crypto/DOTUSDT_5min.csv
-https://mrcrabs.ch/rl/crypto/DOTUSDT_1min.csv

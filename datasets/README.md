@@ -2,6 +2,31 @@
 
 a set of various financial datasets, which are stored outside of git and have to be downloaded manually.
 
+## Cryptocurrencies
+
+* files in ``thesis/``:
+* datasource: ``binance``
+* data resolution: ``1d, 1h, 30min, 5min, 1min``
+* columns: ``index, date (yyyy-mm-dd [hh:mm:ss]), open, high, low, close, volume, tic, day``
+* missing data in OHLC are forward-filled with the last known closing price of the asset with 0 volume
+
+data storage urls in ``thesis/all_data_{data_resolution}.txt``
+
+### Crypto-Index for Thesis 
+
+10 Cryptocurrencies in index: ``'BTCUSDT', 'ETHUSDT', 'LTCUSDT', 'AVAXUSDT', 'LINKUSDT', 'UNIUSDT', 'TLMUSDT', 'AXSUSDT', 'DOGEUSDT', 'SHIBUSDT'``
+
+Start: ``2021-05-11`` End: `2022-11-01`
+
+see files `thesis/{data_resolution}/all_{data_resolution}.csv`
+
+### Datasets of single cryptocurrencies
+
+Available single cryptocurrencies: *from list above*
+
+see files `thesis/{data_resolution}/{symbol}_{data_resolution}.csv`
+
+
 ## Stocks
 
 * files in ``stocks/``
@@ -42,53 +67,5 @@ see file ``stocks/NAS15.csv``
 
 Available stocks : ``"AAPL", "AMZN", "GOOG", "MSFT", "TSLA"`` in `stocks/{symbol}.csv`
 
-## Cryptocurrencies
-
-* files in ``crypto/``:
-* datasource: ``binance``
-* data resolution: ``1d, 1h, 5min``
-* columns: ``index, date (yyyy-mm-dd [hh:mm:ss]), open, high, low, close, volume, tic, day``
-* missing data in OHLC are forward-filled with the last known closing price of the asset with 0 volume
-
-| Dataset       | Start Date          | End Date            | IDX10 | IDX20 |
-|---------------|---------------------|---------------------|-------|-------|
-| ``crypto_1d`` | 2019-07-06 00:00:00 | 2022-06-30 23:59:00 |       |       |
-| ``crypto_1h`` | 2019-07-06 00:00:00 | 2022-06-30 23:59:00 |       |       |
-|               |                     |                     |       |       |
-| ``ADAUSDT``   | 2018-04-18 00:00:00 | 2022-07-20 23:59:00 | X     | X     |
-| ``ALGOUSDT``  | 2019-06-22 00:00:00 | 2022-07-20 23:00:00 |       | X     |
-| ``APEUSDT``   | 2022-03-18 00:00:00 | 2022-07-20 23:00:00 |       |       |
-| ``ATOMUSDT``  | 2019-04-30 00:00:00 | 2022-07-20 23:00:00 |       | X     |
-| ``AVAXUSDT``  | 2020-09-23 00:00:00 | 2022-07-20 23:59:00 |       |       |
-| ``BNBUSDT``   | 2017-11-07 00:00:00 | 2022-07-20 23:59:00 | X     | X     |
-| ``BTCUSDT``   | 2017-08-18 00:00:00 | 2022-07-20 23:59:00 | X     | X     |
-| ``DOGEUSDT``  | 2019-07-06 00:00:00 | 2022-07-20 23:59:00 | X     | X     |
-| ``DOTUSDT``   | 2020-08-19 00:00:00 | 2022-07-20 23:59:00 |       |       |
-| ``EOSUSDT``   | 2018-05-29 00:00:00 | 2022-07-20 23:00:00 |       | X     |
-| ``ETCUSDT``   | 2018-06-13 00:00:00 | 2022-07-20 23:00:00 |       | X     |
-| ``ETHUSDT``   | 2017-08-18 00:00:00 | 2022-07-20 23:59:00 | X     | X     |
-| ``FTMUSDT``   | 2019-06-12 00:00:00 | 2022-07-20 23:00:00 |       | X     |
-| ``IOTAUSDT``  | 2018-06-01 00:00:00 | 2022-07-20 23:00:00 |       | X     |
-| ``LINKUSDT``  | 2019-01-17 00:00:00 | 2022-07-20 23:00:00 | X     | X     |
-| ``LTCUSDT``   | 2017-12-14 00:00:00 | 2022-07-20 23:00:00 | X     | X     |
-| ``MANAUSDT``  | 2020-08-07 00:00:00 | 2022-07-20 23:00:00 |       |       |
-| ``MATICUSDT`` | 2019-04-27 00:00:00 | 2022-07-20 23:00:00 |       | X     |
-| ``NEARUSDT``  | 2020-10-15 00:00:00 | 2022-07-20 23:00:00 |       |       |
-| ``NEOUSDT``   | 2017-11-21 00:00:00 | 2022-07-20 23:00:00 | X     | X     |
-| ``RUNEUSDT``  | 2020-09-05 00:00:00 | 2022-07-20 23:00:00 |       |       |
-| ``SANDUSDT``  | 2020-08-15 00:00:00 | 2022-07-20 23:00:00 |       |       |
-| ``SHIBUSDT``  | 2021-05-11 00:00:00 | 2022-07-20 23:00:00 |       |       |
-| ``SOLUSDT``   | 2020-08-12 00:00:00 | 2022-07-20 23:59:00 |       |       |
-| ``TRXUSDT``   | 2018-06-12 00:00:00 | 2022-07-20 23:00:00 |       | X     |
-| ``UNIUSDT``   | 2020-09-18 00:00:00 | 2022-07-20 23:59:00 |       |       |
-| ``WAVESUSDT`` | 2019-01-19 00:00:00 | 2022-07-20 23:00:00 |       | X     |
-| ``XLMUSDT``   | 2018-06-01 00:00:00 | 2022-07-20 23:00:00 |       | X     |
-| ``XMRUSDT``   | 2019-03-16 00:00:00 | 2022-07-20 23:00:00 | X     | X     |
-| ``XRPUSDT``   | 2018-05-05 00:00:00 | 2022-07-20 23:59:00 | X     | X     |
 
 
-### Datasets of single cryptocurrencies
-
-Available cryptocurrencies: *see list above*
-
-see files `crypto/{symbol}_{data_resolution}.csv`

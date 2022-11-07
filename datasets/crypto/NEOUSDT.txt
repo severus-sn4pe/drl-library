@@ -1,4 +1,0 @@
-https://mrcrabs.ch/rl/crypto/NEOUSDT_1d.csv
-https://mrcrabs.ch/rl/crypto/NEOUSDT_1h.csv
-https://mrcrabs.ch/rl/crypto/NEOUSDT_5min.csv
-https://mrcrabs.ch/rl/crypto/NEOUSDT_1min.csv

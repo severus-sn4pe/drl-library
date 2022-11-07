@@ -1,1 +1,1 @@
-https://mrcrabs.ch/rl/stocks/MSFT.csv
+https://data.renold.xyz/drl/stocks/MSFT.csv

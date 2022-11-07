@@ -1,1 +1,1 @@
-https://mrcrabs.ch/rl/stocks/GOOG.csv
+https://data.renold.xyz/drl/stocks/GOOG.csv

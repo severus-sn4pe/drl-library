@@ -1,0 +1,11 @@
+https://data.renold.xyz/drl/thesis/1d/all_1d.csv
+https://data.renold.xyz/drl/thesis/1d/BTCUSDT_1d.csv
+https://data.renold.xyz/drl/thesis/1d/ETHUSDT_1d.csv
+https://data.renold.xyz/drl/thesis/1d/LTCUSDT_1d.csv
+https://data.renold.xyz/drl/thesis/1d/AVAXUSDT_1d.csv
+https://data.renold.xyz/drl/thesis/1d/LINKUSDT_1d.csv
+https://data.renold.xyz/drl/thesis/1d/UNIUSDT_1d.csv
+https://data.renold.xyz/drl/thesis/1d/TLMUSDT_1d.csv
+https://data.renold.xyz/drl/thesis/1d/AXSUSDT_1d.csv
+https://data.renold.xyz/drl/thesis/1d/DOGEUSDT_1d.csv
+https://data.renold.xyz/drl/thesis/1d/SHIBUSDT_1d.csv
