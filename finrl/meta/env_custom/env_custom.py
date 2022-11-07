@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import gym
 import matplotlib
 import matplotlib.pyplot as plt
@@ -29,7 +30,7 @@ class CustomTradingEnv(gym.Env):
         self.df = df
         self.stock_dim = stock_dim
         self.hmax = hmax
-        self.num_stock_shares = num_stock_shares
+        self.num_stock_shares = num_stock_shares # initial amount of shares
         self.initial_amount = initial_amount  # get the initial cash
         self.buy_cost_pct = buy_cost_pct
         self.sell_cost_pct = sell_cost_pct
@@ -37,6 +38,7 @@ class CustomTradingEnv(gym.Env):
         self.state_space = state_space
         self.action_space = action_space
         self.tech_indicator_list = tech_indicator_list
+        self._generate_action_normalizer()
         self.action_space = spaces.Box(low=-1, high=1, shape=(self.action_space,))
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(self.state_space,))
         self.data = self.df.loc[self.day, :]
@@ -66,6 +68,7 @@ class CustomTradingEnv(gym.Env):
                                                           * np.array(self.state[1: 1 + self.stock_dim]))]
         self.rewards_memory = []
         self.actions_memory = []
+        self.cash_memory = []
         self.state_memory = ([])  # we need sometimes to preserve the state in the middle of trading process
         self.date_memory = [self._get_date()]
         #         self.logger = Logger('results',[CSVOutputFormat])
@@ -171,7 +174,8 @@ class CustomTradingEnv(gym.Env):
 
     def _make_plot(self):
         plt.plot(self.asset_memory, "r")
-        plt.savefig(f"{self.root_dir}/results/account_value_trade_{self.episode}.png")
+        filename = f"{self.root_dir}/results/account_value_trade_{self.episode}.png"
+        plt.savefig(filename)
         plt.close()
 
     def step(self, actions):
@@ -205,6 +209,12 @@ class CustomTradingEnv(gym.Env):
             df_rewards = pd.DataFrame(self.rewards_memory)
             df_rewards.columns = ["account_rewards"]
             df_rewards["date"] = self.date_memory[:-1]
+            df_rewards.index = df_rewards.date
+            df_cash = pd.DataFrame(self.cash_memory)
+            df_cash.columns = ["cash_balance"]
+            df_cash["date"] = self.date_memory[:-1]
+            df_cash.index = df_cash.date
+
             if self.episode % self.print_verbosity == 0:
                 print(f"day: {self.day}, episode: {self.episode}")
                 print(f"begin_total_asset: {self.asset_memory[0]:0.2f}")
@@ -222,6 +232,7 @@ class CustomTradingEnv(gym.Env):
                 df_actions.to_csv(f"{self.root_dir}/results/actions_{filename_suffix}.csv")
                 df_total_value.to_csv(f"{self.root_dir}/results/account_value_{filename_suffix}.csv", index=False)
                 df_rewards.to_csv(f"{self.root_dir}/results/account_rewards_{filename_suffix}.csv", index=False)
+                df_cash.to_csv(f"{self.root_dir}/results/cash_balance_{filename_suffix}.csv", index=False)
                 plt.plot(self.asset_memory, "r")
                 plt.savefig(f"{self.root_dir}/results/account_value_{filename_suffix}.png", index=False)
                 plt.close()
@@ -236,8 +247,10 @@ class CustomTradingEnv(gym.Env):
             return self.state, self.reward, self.terminal, {}
 
         else:
-            actions = actions * self.hmax  # actions initially is scaled between 0 to 1
-            actions = actions.astype(int)  # convert into integer because we can't by fraction of shares
+            actions = actions * self.action_norm_vector
+            # actions = actions * self.hmax  # actions initially is scaled between 0 to 1
+            # actions = actions.astype(int)  # convert into integer because we can't by fraction of shares
+
             if self.turbulence_threshold is not None:
                 if self.turbulence >= self.turbulence_threshold:
                     actions = np.array([-self.hmax] * self.stock_dim)
@@ -279,6 +292,7 @@ class CustomTradingEnv(gym.Env):
                 * np.array(self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
             )
             self.asset_memory.append(end_total_asset)
+            self.cash_memory.append(self.state[0])
             self.date_memory.append(self._get_date())
             self.reward = end_total_asset - begin_total_asset
             self.rewards_memory.append(self.reward)
@@ -316,6 +330,7 @@ class CustomTradingEnv(gym.Env):
         self.terminal = False
         # self.iteration=self.iteration
         self.rewards_memory = []
+        self.cash_memory = []
         self.actions_memory = []
         self.date_memory = [self._get_date()]
 
@@ -452,3 +467,15 @@ class CustomTradingEnv(gym.Env):
         e = DummyVecEnv([lambda: self])
         obs = e.reset()
         return e, obs
+
+    def _generate_action_normalizer(self):
+        # normalize action to adjust for large price differences in cryptocurrencies
+        action_norm_vector = []
+        price_0 = self.df[0:self.stock_dim].close.tolist()  # Use row 0 prices to normalize
+        for price in price_0:
+            x = math.floor(math.log(price, 10))  # the order of magnitude
+            action_norm_vector.append(1 / (10 ** x))
+
+        action_norm_vector = (np.asarray(action_norm_vector) * 10000)  # roughly control max tx amount for each action
+        print(f"action normalizer: {action_norm_vector}")
+        self.action_norm_vector = np.asarray(action_norm_vector)

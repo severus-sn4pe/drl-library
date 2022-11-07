@@ -1,10 +1,11 @@
-from __future__ import annotations
+import math
 
 import numpy as np
-
+from gym import spaces
 
 class CryptoEnv:  # custom env
-    def __init__(self, config, lookback=1, initial_capital=1e6, buy_cost_pct=1e-3, sell_cost_pct=1e-3, gamma=0.99):
+    def __init__(self, config, lookback=1, initial_capital=1e6,
+                 buy_cost_pct=1e-3, sell_cost_pct=1e-3, gamma=0.99):
         self.lookback = lookback
         self.initial_total_asset = initial_capital
         self.initial_cash = initial_capital
@@ -17,6 +18,19 @@ class CryptoEnv:  # custom env
         self._generate_action_normalizer()
         self.crypto_num = self.price_array.shape[1]
         self.max_step = self.price_array.shape[0] - lookback - 1
+        # ----
+        self.state_space = state_space
+        self.action_space = action_space
+        self.action_space = spaces.Box(low=-1, high=1, shape=(self.action_space,))
+        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(self.state_space,))
+
+        # "state_space": state_space,
+        # "stock_dim": stock_dimension,
+        # "tech_indicator_list": stocks.INDICATORS,
+        # "action_space": stock_dimension,
+        # "reward_scaling": 1e-4
+
+        # ----
 
         # reset
         self.time = lookback - 1
@@ -63,7 +77,7 @@ class CryptoEnv:  # custom env
 
         for index in np.where(actions > 0)[0]:  # buy_index:
             if price[index] > 0:  # Buy only if the price is > 0 (no missing data in this particular date)
-                buy_num_shares = min(self.cash // (price[index] * (1 + self.buy_cost_pct)), actions[index])
+                buy_num_shares = min(self.cash // price[index], actions[index])
                 self.stocks[index] += buy_num_shares
                 self.cash -= price[index] * buy_num_shares * (1 + self.buy_cost_pct)
 
@@ -96,16 +110,10 @@ class CryptoEnv:  # custom env
         action_norm_vector = []
         price_0 = self.price_array[0]  # Use row 0 prices to normalize
         for price in price_0:
-            x = len(str(price)) - 7
+            x = math.floor(math.log(price, 10))  # the order of magnitude
             action_norm_vector.append(1 / ((10) ** x))
 
+        action_norm_vector = (
+            np.asarray(action_norm_vector) * 10000
+        )  # roughly control the maximum transaction amount for each action
         self.action_norm_vector = np.asarray(action_norm_vector)
-
-        # alternative implementation from meta-package:
-        # for price in price_0:
-        #     x = math.floor(math.log(price, 10))  # the order of magnitude
-        #     action_norm_vector.append(1 / ((10) ** x))
-        #
-        # roughly control the maximum transaction amount for each action
-        # action_norm_vector = (np.asarray(action_norm_vector) * 10000)
-        # self.action_norm_vector = np.asarray(action_norm_vector)

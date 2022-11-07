@@ -64,10 +64,10 @@ class DRLAgent:
     @staticmethod
     def DRL_prediction(model, environment, deterministic=True):
         try:
-            environment.get_sb_env()
+            test_env, test_obs = environment.get_sb_env()
         except ValueError:
-            pass
-        test_env, test_obs = environment.get_sb_env()
+            test_env, test_obs = environment.get_sb_env()
+
         """make a prediction"""
         account_memory = []
         actions_memory = []
