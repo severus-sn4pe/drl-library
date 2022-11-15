@@ -83,7 +83,7 @@ class DRLAgent:
                 actions_memory = test_env.env_method(method_name="save_action_memory")
             # state_memory=test_env.env_method(method_name="save_state_memory") # add current state to state memory
             if dones[0]:
-                print("hit end!")
+                print(f"done in step {i}!")
                 break
         return account_memory[0], actions_memory[0]
 

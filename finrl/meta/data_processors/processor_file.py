@@ -103,7 +103,18 @@ class FileProcessor:
 
     def calculate_turbulence(self, data, time_period=252):
         """calculate turbulence index based on dow 30"""
-        # can add other market assets
+        # fixed look back period of 60 days, scaled depending on selected time_interval
+        if self.time_interval == '1d':
+            time_period = 60
+        if self.time_interval == '1h':
+            time_period = 60 * 24
+        if self.time_interval == '30min':
+            time_period = 60 * 24 * 2
+        if self.time_interval == '5min':
+            time_period = 60 * 24 * 12
+        if self.time_interval == '1min':
+            time_period = 60 * 24 * 60
+        print(f"Calculating Turbulence for {self.time_interval} res with lookback_period={time_period}")
         df = data.copy()
         df_price_pivot = df.pivot(index="date", columns="tic", values="close")
         # use returns to calculate turbulence

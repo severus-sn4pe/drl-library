@@ -25,7 +25,7 @@ class CustomTradingEnv(gym.Env):
                  buy_cost_pct: list[float], sell_cost_pct: list[float], reward_scaling: float, state_space: int,
                  action_space: int, tech_indicator_list: list[str], turbulence_threshold=None,
                  risk_indicator_col="turbulence", make_plots: bool = False, print_verbosity=10, day=0,
-                 initial=True, previous_state=[], model_name="", mode="", iteration="", root_dir='.'):
+                 initial=True, previous_state=[], model_name="", mode="", iteration="", root_dir='.', seed=None):
         self.day = day
         self.df = df
         self.stock_dim = stock_dim
@@ -73,7 +73,7 @@ class CustomTradingEnv(gym.Env):
         self.date_memory = [self._get_date()]
         #         self.logger = Logger('results',[CSVOutputFormat])
         # self.reset()
-        self._seed()
+        self._seed(seed)
 
     def _sell_stock(self, index, action):
         def _do_sell_normal():
