@@ -27,7 +27,7 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=REQUIRES
-    + ["pyfolio @ git+https://github.com/quantopian/pyfolio.git#egg=pyfolio-0.9.2"]
+    + ["pyfolio @ git+https://github.com/severus-sn4pe/pyfolio-reloaded.git@c797d6e7511a2139f2d5c4aff139db5285374c00"]
     + ["elegantrl @ git+https://github.com/AI4Finance-Foundation/ElegantRL.git#egg=elegantrl"],
     # install_requires=REQUIRES,
     description="Deep Reinforcement Learning based on FinRL",

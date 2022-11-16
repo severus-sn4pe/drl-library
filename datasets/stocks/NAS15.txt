@@ -1,1 +1,1 @@
-https://mrcrabs.ch/rl/stocks/NAS15.csv
+https://data.renold.xyz/drl/stocks/NAS15.csv

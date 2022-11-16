@@ -1,1 +1,1 @@
-https://mrcrabs.ch/rl/stocks/AMZN.csv
+https://data.renold.xyz/drl/stocks/AMZN.csv

@@ -1,1 +1,1 @@
-https://mrcrabs.ch/rl/stocks/DOW30.csv
+https://data.renold.xyz/drl/stocks/DOW30.csv

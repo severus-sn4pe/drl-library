@@ -3,3 +3,10 @@ __pycache__/
 .ipynb_checkpoints/
 
 scripts/playground.ipynb
+
+fin-str/
+
+scripts/crypto_import/data/
+datasets/thesis/_old/
+
+demo/
