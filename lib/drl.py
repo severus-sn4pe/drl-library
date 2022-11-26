@@ -1,4 +1,15 @@
+import os
+
 from finrl.meta.data_processor import DataProcessor
+from finrl.meta.env_custom.env_custom import CustomTradingEnv
+
+from stable_baselines3 import A2C
+from stable_baselines3 import DDPG
+from stable_baselines3 import PPO
+from stable_baselines3 import SAC
+from stable_baselines3 import TD3
+
+MODELS = {"A2C": A2C, "DDPG": DDPG, "TD3": TD3, "SAC": SAC, "PPO": PPO}
 
 
 def load_dataset(filename, indicators, use_turbulence=False, use_vix=False, time_interval='1d'):
@@ -41,3 +52,27 @@ def generate_yahoo_dataset(name, ticker_list, start_date, end_date, folder='data
     df = data_split(df, start_date, end_date)
     df.to_csv(filename)
     print(f"File {filename} written.")
+
+
+def get_train_env(df, env_kwargs) -> CustomTradingEnv:
+    kwargs = env_kwargs.copy()
+    e_train_gym = CustomTradingEnv(df=df, **kwargs)
+    env, _ = e_train_gym.get_sb_env()
+    return env
+
+
+def get_test_env(df, env_kwargs, turb_thres=None) -> CustomTradingEnv:
+    kwargs = env_kwargs.copy()
+    kwargs['mode'] = 'test'
+    return CustomTradingEnv(df=df, turbulence_threshold=turb_thres, **kwargs)
+
+
+def load_model_from_file(model_name, filename, tensorboard_log):
+    model_file_exists = os.path.isfile(f"{filename}.zip")
+    if not model_file_exists:
+        raise ValueError("NoModelFileAvailableError")
+
+    model_type = MODELS[model_name]
+    loaded_model = model_type.load(f"{filename}.zip", tensorboard_log=tensorboard_log)
+    print(f"loaded model from {filename}")
+    return loaded_model
