@@ -1,1 +1,7 @@
-*.csv
+thesis/1d/*.csv
+thesis/1h/*.csv
+thesis/1min/*.csv
+thesis/5min/*.csv
+thesis/30min/*.csv
+stocks/*.csv
+thesis/*.csv
