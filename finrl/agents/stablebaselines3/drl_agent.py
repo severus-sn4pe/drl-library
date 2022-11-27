@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import numpy as np
+from stable_baselines3.common.callbacks import CheckpointCallback
 
 from finrl.agents.stablebaselines3.models import MODELS, MODEL_KWARGS, NOISE
 from finrl.agents.stablebaselines3.tensorboard_callback import TensorboardCallback
@@ -54,10 +55,16 @@ class DRLAgent:
         )
 
     def train_model(self, model, tb_log_name, total_timesteps=5000):
+        checkpoint_callback = CheckpointCallback(
+            save_freq=100_000,
+            save_path='./trained_models/checkpoints/',
+            name_prefix=tb_log_name,
+            verbose=1
+        )
         model = model.learn(
             total_timesteps=total_timesteps,
             tb_log_name=tb_log_name,
-            callback=TensorboardCallback(),
+            callback=[TensorboardCallback(), checkpoint_callback],
         )
         return model
 

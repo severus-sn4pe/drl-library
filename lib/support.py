@@ -26,6 +26,7 @@ def check_run_directory_structure(root_dir, results_dir='results', strat_name=No
                 if not os.path.exists(f"{root_dir}/{results_dir}/{strat_name}/{model_name}/{run_name}"):
                     os.mkdir(f"{root_dir}/{results_dir}/{strat_name}/{model_name}/{run_name}")
 
+
 def get_time():
     now = datetime.now()
     return now.strftime("%d.%m.%Y %H:%M:%S")
@@ -39,3 +40,7 @@ def get_duration(duration):
 
 def log_duration(start_time):
     print(f"{get_time()}: finished in {get_duration(time.time() - start_time)}")
+
+
+def get_run_timestamp():
+    return datetime.now().strftime("%Y%m%d_%H%M")

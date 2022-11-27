@@ -1,13 +1,11 @@
-import datetime
 import time
 
 import pandas as pd
 
 from config import crypto
 from config import general as config
-from finrl.agents.stablebaselines3.drl_agent import DRLAgent
-from lib.drl import data_split, get_train_env, get_test_env, load_model_from_file
-from lib.support import log_duration, check_run_directory_structure
+from lib.drl import data_split, train, test, get_model_params
+from lib.support import check_run_directory_structure, get_run_timestamp
 
 # global settings
 ROOT_DIR = '.'
@@ -15,23 +13,6 @@ ROOT_DIR = '.'
 STRATEGY_NAME = "cs"
 MODEL_DIR = f"{ROOT_DIR}/{config.TRAINED_MODEL_DIR}/{STRATEGY_NAME}"
 TENSORBOARD_DIR = f"./tensorboard_log/{STRATEGY_NAME}"
-
-
-def get_model_params(model_name):
-    params = {}
-    if model_name == "A2C":
-        params = {"n_steps": 5, "ent_coef": 0.01, "learning_rate": 0.0007}
-    if model_name == "DDPG":
-        params = {"batch_size": 128, "buffer_size": 50000, "learning_rate": 0.001}
-    if model_name == "PPO":
-        params = {"n_steps": 2048, "ent_coef": 0.01, "learning_rate": 0.00025, "batch_size": 128}
-    if model_name == "TD3":
-        params = {"batch_size": 100, "buffer_size": 1_000_000, "learning_rate": 0.001}
-    if model_name == "SAC":
-        params = {
-            "batch_size": 128, "buffer_size": 100_000,
-            "learning_rate": 0.0001, "learning_starts": 100, "ent_coef": "auto_0.1"}
-    return params
 
 
 # loading dataset
@@ -66,50 +47,38 @@ ENV_KWARGS = {
     "model_name": "PLACEHOLDER"
 }
 
-file_start = time.time()
-
-# Run Settings
-RUN_NAME = datetime.datetime.now().strftime("%Y%m%d_%H%M") + "_test"
+# Settings
 MODEL_NAME = "A2C"
 model_params = get_model_params(MODEL_NAME)
+RUN_NAME = get_run_timestamp() + "_crashRestart2M"
+
 print(f"Using Model {MODEL_NAME} as {RUN_NAME} with params={model_params}")
 check_run_directory_structure(ROOT_DIR, config.RESULTS_DIR, STRATEGY_NAME, MODEL_NAME, RUN_NAME)
 
 results_file_prefix = f"{ROOT_DIR}/{config.RESULTS_DIR}/{STRATEGY_NAME}/{MODEL_NAME}/{MODEL_NAME}_{RUN_NAME}"
 model_filename = f"{MODEL_DIR}/{STRATEGY_NAME}_{MODEL_NAME}_{RUN_NAME}"
 
-# ===== TRAIN
-total_timesteps = 2_000_0
+retrain_existing_model = True
+previous_model_name = f"./trained_models/checkpoints/A2C_20221127_1435_crashRestart2M_500000_steps"
 
 ENV_KWARGS['run_name'] = RUN_NAME
 ENV_KWARGS['model_name'] = MODEL_NAME
-env_train = get_train_env(train_df, ENV_KWARGS)
-agent = DRLAgent(env=env_train)
+timesteps = 500_000
 
-USE_EXISTING_MODEL = True
+settings = {
+    "total_timesteps": timesteps,
+    "retrain_existing_model": retrain_existing_model,
+    "previous_model_name": previous_model_name,
+    "tensorboard_log": TENSORBOARD_DIR,
+    "env_kwargs": ENV_KWARGS,
+    "model_params": model_params,
+    "save_model": True,
+    "target_model_filename": model_filename,
+    "file_prefix": results_file_prefix
+}
 
-if USE_EXISTING_MODEL:
-    previous_model_name = f"{MODEL_DIR}/{STRATEGY_NAME}_{MODEL_NAME}_20221126_0304_20M"
-    model = load_model_from_file(MODEL_NAME, previous_model_name, TENSORBOARD_DIR)
-    model.set_env(env_train)
-else:
-    # initialize new model
-    model = agent.get_model(MODEL_NAME, model_kwargs=model_params, tensorboard_log=TENSORBOARD_DIR)
-
-start = time.time()
-trained_model = agent.train_model(model=model, tb_log_name=f"{MODEL_NAME}_{RUN_NAME}", total_timesteps=total_timesteps)
-log_duration(start)
-
-trained_model.save(model_filename)
-print(f"Storing model in {model_filename}")
+# ===== TRAIN
+trained = train(train_df, ENV_KWARGS, settings)
 
 # ===== TEST
-env_test = get_test_env(test_df, MODEL_NAME, ENV_KWARGS)
-model = load_model_from_file(MODEL_NAME, model_filename, TENSORBOARD_DIR)
-
-start = time.time()
-df_account_value, df_actions = DRLAgent.DRL_prediction(model=model, environment=env_test)
-log_duration(start)
-
-df_account_value.to_csv(f"{results_file_prefix}_portfolio_value.csv")
-df_actions.to_csv(f"{results_file_prefix}_actions.csv")
+test(test_df, ENV_KWARGS, settings)
