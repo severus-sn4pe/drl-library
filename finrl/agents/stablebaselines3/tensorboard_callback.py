@@ -1,6 +1,5 @@
-from stable_baselines3.common.callbacks import BaseCallback
 import numpy as np
-import pandas as pd
+from stable_baselines3.common.callbacks import BaseCallback
 
 
 class TensorboardCallback(BaseCallback):
@@ -31,6 +30,7 @@ class TensorboardCallback(BaseCallback):
                 self.logger.record(key="my-stats/episode", value=env.episode)
                 self.logger.record(key="my-stats/episode-reward", value=total_reward)
                 self.logger.record(key="my-stats/trades", value=env.trades)
+                self.logger.record(key="my-stats/missed_trades", value=env.missed_trades)
                 self.logger.record(key="my-stats/sharpe", value=sharpe)
                 self.logger.record(key="my-stats/sortino", value=sortino)
             self.logger.record(key="train/reward", value=self.locals["rewards"][0])

@@ -67,6 +67,7 @@ class CustomTradingEnv(gym.Env):
         self.turbulence = 0
         self.cost = 0
         self.trades = 0
+        self.missed_trades = 0
         self.episode = 0
 
         # memorize all the total balance change
@@ -103,6 +104,8 @@ class CustomTradingEnv(gym.Env):
                     self.cost += (self.state[index + 1] * sell_num_shares * self.sell_cost_pct[index])
                     if sell_num_shares > 0:
                         self.trades += 1
+                    else:
+                        self.missed_trades += 1
                 else:
                     sell_num_shares = 0
             else:
@@ -164,6 +167,8 @@ class CustomTradingEnv(gym.Env):
                 self.cost += (self.state[index + 1] * buy_num_shares * self.buy_cost_pct[index])
                 if buy_num_shares > 0:
                     self.trades += 1
+                else:
+                    self.missed_trades += 1
             else:
                 buy_num_shares = 0
 
@@ -243,7 +248,8 @@ class CustomTradingEnv(gym.Env):
                 'total_cost': self.cost,
                 'trades': self.trades,
                 'sharpe': sharpe,
-                'sortino': sortino
+                'sortino': sortino,
+                'missed_trades': self.missed_trades
             }
 
             if not self.episode % self.print_verbosity:
@@ -259,6 +265,7 @@ class CustomTradingEnv(gym.Env):
                 print(f"total_reward: {tot_reward:0.2f}")
                 print(f"total_cost: {self.cost:0.2f}")
                 print(f"total_trades: {self.trades}")
+                print(f"missed_trades: {self.missed_trades}")
                 print(f"Sharpe: {sharpe:0.3f}")
                 print(f"Sortino: {sortino:0.3f}")
                 print("=================================")
@@ -354,6 +361,7 @@ class CustomTradingEnv(gym.Env):
         self.turbulence = 0
         self.cost = 0
         self.trades = 0
+        self.missed_trades = 0
         self.terminal = False
         # self.iteration=self.iteration
         self.rewards_memory = []
