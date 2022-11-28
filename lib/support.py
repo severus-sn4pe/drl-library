@@ -43,4 +43,4 @@ def log_duration(start_time):
 
 
 def get_run_timestamp():
-    return datetime.now().strftime("%Y%m%d_%H%M")
+    return datetime.now().strftime("%m%d%H%M")

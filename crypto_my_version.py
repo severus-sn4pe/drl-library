@@ -1,5 +1,3 @@
-import time
-
 import pandas as pd
 
 from config import crypto
@@ -50,7 +48,7 @@ ENV_KWARGS = {
 # Settings
 MODEL_NAME = "A2C"
 model_params = get_model_params(MODEL_NAME)
-RUN_NAME = get_run_timestamp() + "_crashRestart2M"
+RUN_NAME = get_run_timestamp() + "_CFG1_10M_debug"
 
 print(f"Using Model {MODEL_NAME} as {RUN_NAME} with params={model_params}")
 check_run_directory_structure(ROOT_DIR, config.RESULTS_DIR, STRATEGY_NAME, MODEL_NAME, RUN_NAME)
@@ -59,11 +57,11 @@ results_file_prefix = f"{ROOT_DIR}/{config.RESULTS_DIR}/{STRATEGY_NAME}/{MODEL_N
 model_filename = f"{MODEL_DIR}/{STRATEGY_NAME}_{MODEL_NAME}_{RUN_NAME}"
 
 retrain_existing_model = True
-previous_model_name = f"./trained_models/checkpoints/A2C_20221127_1435_crashRestart2M_500000_steps"
+previous_model_name = f"./trained_models/cs/cs_A2C_11272204_CFG1_10M"
 
 ENV_KWARGS['run_name'] = RUN_NAME
 ENV_KWARGS['model_name'] = MODEL_NAME
-timesteps = 500_000
+timesteps = 1_000_000
 
 settings = {
     "total_timesteps": timesteps,
