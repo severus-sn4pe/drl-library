@@ -253,8 +253,9 @@ class CustomTradingEnv(gym.Env):
             }
 
             if not self.episode % self.print_verbosity:
-                if self.make_plots:
-                    self._make_plot()
+                if not self.episode % 1000:
+                    if self.make_plots:
+                        self._make_plot()
 
                 stats_df = pd.DataFrame([stats])
                 stats_df.to_csv(f"{self.main_path}/episode_stats.csv", header=False, index=False, mode='a')
