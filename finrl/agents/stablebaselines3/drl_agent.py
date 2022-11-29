@@ -56,8 +56,8 @@ class DRLAgent:
 
     def train_model(self, model, tb_log_name, total_timesteps=5000):
         checkpoint_callback = CheckpointCallback(
-            save_freq=100_000,
-            save_path='./trained_models/checkpoints/',
+            save_freq=200_000,
+            save_path='./trained_models/model_checkpoints/',
             name_prefix=tb_log_name,
             verbose=1
         )
