@@ -102,10 +102,14 @@ class FileProcessor:
         return df
 
     def calculate_turbulence(self, data, time_period=252):
-        """calculate turbulence index based on dow 30"""
+        """calculate turbulence index"""
         # fixed look back period of 60 days, scaled depending on selected time_interval
         if self.time_interval == '1d':
             time_period = 60
+        if self.time_interval == '6h':
+            time_period = 60 * 4
+        if self.time_interval == '12h':
+            time_period = 60 * 2
         if self.time_interval == '1h':
             time_period = 60 * 24
         if self.time_interval == '30min':

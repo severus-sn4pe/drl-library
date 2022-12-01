@@ -11,6 +11,8 @@ from gym import spaces
 from gym.utils import seeding
 from stable_baselines3.common.vec_env import DummyVecEnv
 
+from finrl.meta.env_custom.crypto_env_normalizer import CryptoEnvNormalizer
+
 matplotlib.use("Agg")
 
 from stable_baselines3.common.logger import configure, Logger, KVWriter, CSVOutputFormat, TensorBoardOutputFormat
@@ -42,7 +44,8 @@ class CustomTradingEnv(gym.Env):
         self.tech_indicator_list = tech_indicator_list
         self._generate_action_normalizer()
         self.action_space = spaces.Box(low=-1, high=1, shape=(self.action_space,))
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(self.state_space,))
+        self.env_normalizer = CryptoEnvNormalizer(stock_dim, tech_indicator_list, state_space, df)
+        self.observation_space = self.env_normalizer.get_observation_space()
         self.data = self.df.loc[self.day, :]
         self.terminal = False
         self.make_plots = make_plots
@@ -253,8 +256,9 @@ class CustomTradingEnv(gym.Env):
             }
 
             if not self.episode % self.print_verbosity:
-                if self.make_plots:
-                    self._make_plot()
+                if not self.episode % 1000:
+                    if self.make_plots:
+                        self._make_plot()
 
                 stats_df = pd.DataFrame([stats])
                 stats_df.to_csv(f"{self.main_path}/episode_stats.csv", header=False, index=False, mode='a')
@@ -342,7 +346,9 @@ class CustomTradingEnv(gym.Env):
             self.reward = self.reward * self.reward_scaling
             self.state_memory.append(self.state)  # add current state in state_recorder for each step
 
-        return self.state, self.reward, self.terminal, {}
+        normalized_state = self.env_normalizer.get_normalized_state(self.day, self.state)
+        return normalized_state, self.reward, self.terminal, {}
+        # return self.state, self.reward, self.terminal, {}
 
     def reset(self):
         # initiate state
@@ -371,7 +377,8 @@ class CustomTradingEnv(gym.Env):
 
         self.episode += 1
 
-        return self.state
+        normalized_state = self.env_normalizer.get_normalized_state(self.day, self.state)
+        return normalized_state
 
     def render(self, mode="human", close=False):
         return self.state
