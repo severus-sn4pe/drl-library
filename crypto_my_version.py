@@ -14,14 +14,14 @@ TENSORBOARD_DIR = f"./tensorboard_log/{STRATEGY_NAME}"
 
 
 # loading dataset
-df = pd.read_csv(f"{config.DATA_SAVE_DIR}/thesis/crypto_1d_parsed.csv", index_col=0)
+df = pd.read_csv(f"{config.DATA_SAVE_DIR}/thesis/crypto_1d_plus.csv", index_col=0)
 train_df = data_split(df, crypto.TRAIN_START_DATE, crypto.TRAIN_END_DATE)
 test_df = data_split(df, crypto.TEST_START_DATE, crypto.TEST_END_DATE)
 print(f"train {train_df.shape} start: {crypto.TRAIN_START_DATE} end: {crypto.TRAIN_END_DATE}")
 print(f"test  {test_df.shape} start: {crypto.TEST_START_DATE} end: {crypto.TEST_END_DATE}")
 
 stock_dimension = len(train_df.tic.unique())
-state_space = 1 + 2 * stock_dimension + len(crypto.INDICATORS) * stock_dimension
+state_space = 1 + 2 * stock_dimension + len(crypto.INDICATORS_PLUS) * stock_dimension
 print(f"Stock Dimension: {stock_dimension}, State Space: {state_space}")
 
 buy_cost_list = sell_cost_list = [0.001] * stock_dimension
@@ -35,9 +35,9 @@ ENV_KWARGS = {
     "sell_cost_pct": sell_cost_list,
     "state_space": state_space,
     "stock_dim": stock_dimension,
-    "tech_indicator_list": crypto.INDICATORS,
+    "tech_indicator_list": crypto.INDICATORS_PLUS,
     "action_space": stock_dimension,
-    "reward_scaling": 1e-4,
+    "reward_scaling": 1e-6,
     "make_plots": True,
     "mode": "train",
     "strategy_name": STRATEGY_NAME,
@@ -47,21 +47,22 @@ ENV_KWARGS = {
 
 # Settings
 MODEL_NAME = "A2C"
-model_params = get_model_params(MODEL_NAME)
-RUN_NAME = get_run_timestamp() + "_CFG1_10M_debug"
+model_params = {"n_steps": 5, "ent_coef": 0.01, "learning_rate": 0.007} # get_model_params(MODEL_NAME)
+RUN_CONFIG = "V1"
+RUN_NAME = f"{RUN_CONFIG}_{get_run_timestamp()}_100k"
+
+ENV_KWARGS['run_name'] = RUN_NAME
+ENV_KWARGS['model_name'] = MODEL_NAME
+timesteps = 100_000
+
+retrain_existing_model = False
+previous_model_name = f"./trained_models/cs/modelname"
 
 print(f"Using Model {MODEL_NAME} as {RUN_NAME} with params={model_params}")
 check_run_directory_structure(ROOT_DIR, config.RESULTS_DIR, STRATEGY_NAME, MODEL_NAME, RUN_NAME)
 
 results_file_prefix = f"{ROOT_DIR}/{config.RESULTS_DIR}/{STRATEGY_NAME}/{MODEL_NAME}/{MODEL_NAME}_{RUN_NAME}"
 model_filename = f"{MODEL_DIR}/{STRATEGY_NAME}_{MODEL_NAME}_{RUN_NAME}"
-
-retrain_existing_model = True
-previous_model_name = f"./trained_models/cs/cs_A2C_11272204_CFG1_10M"
-
-ENV_KWARGS['run_name'] = RUN_NAME
-ENV_KWARGS['model_name'] = MODEL_NAME
-timesteps = 1_000_000
 
 settings = {
     "total_timesteps": timesteps,
