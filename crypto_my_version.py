@@ -47,8 +47,8 @@ ENV_KWARGS = {
 
 # Settings
 MODEL_NAME = "A2C"
-model_params = {"n_steps": 5, "ent_coef": 0.01, "learning_rate": 0.007} # get_model_params(MODEL_NAME)
-RUN_CONFIG = "V1"
+model_params = {"n_steps": 16, "ent_coef": 0.00001, "learning_rate": 0.001}  # get_model_params(MODEL_NAME)
+RUN_CONFIG = "V01"
 RUN_NAME = f"{RUN_CONFIG}_{get_run_timestamp()}_100k"
 
 ENV_KWARGS['run_name'] = RUN_NAME
