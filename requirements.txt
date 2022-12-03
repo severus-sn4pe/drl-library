@@ -4,7 +4,6 @@ alpaca-trade-api
 exchange_calendars
 gputil
 gym>=0.17
-jqdatasdk
 lz4
 #pyfolio
 # plot

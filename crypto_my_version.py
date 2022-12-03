@@ -47,13 +47,13 @@ ENV_KWARGS = {
 
 # Settings
 MODEL_NAME = "A2C"
-model_params = {"n_steps": 16, "ent_coef": 0.00001, "learning_rate": 0.001}  # get_model_params(MODEL_NAME)
+model_params = {"n_steps": 16, "ent_coef": 1e-5, "learning_rate": 1e-3}  # get_model_params(MODEL_NAME)
 RUN_CONFIG = "V01"
-RUN_NAME = f"{RUN_CONFIG}_{get_run_timestamp()}_100k"
+RUN_NAME = f"{RUN_CONFIG}_{get_run_timestamp()}_2M"
 
 ENV_KWARGS['run_name'] = RUN_NAME
 ENV_KWARGS['model_name'] = MODEL_NAME
-timesteps = 100_000
+timesteps = 2_000_000
 
 retrain_existing_model = False
 previous_model_name = f"./trained_models/cs/modelname"
