@@ -15,6 +15,9 @@ class CryptoEnvNormalizer:
         self.config_path = f"{self.root_path}/datasets/thesis/feature_normalization"
         self.df = df
 
+        # scaler for balance, clip everything above 100k to 1
+        self.balance_scaler = MinMaxScaler(clip=True)
+        self.balance_scaler.fit(pd.DataFrame([np.array([100_000]), np.array([0])]))
         # used for close, sma7, sma30, bollub, bolllb
         self.price_scaler = MinMaxScaler(clip=True)
         price_max_norm = pd.read_csv(f"{self.config_path}/price_norm_clean.csv", index_col=0)
@@ -45,14 +48,13 @@ class CryptoEnvNormalizer:
     def get_observation_space(self):
         lower_bounds = self._get_lower_bounds()
         upper_bounds = self._get_upper_bounds()
-        return spaces.Box(low=lower_bounds, high=upper_bounds,
+        return spaces.Box(low=np.array(lower_bounds, dtype=np.float64),
+                          high=np.array(upper_bounds, dtype=np.float64),
                           shape=(self.state_space,), dtype=np.float64)
 
     def _get_lower_bounds(self):
-        balance_lower = np.array([0])
-        price_lower = np.array([0] * self.stock_dim)
-        asset_balance_lower = np.array([0] * self.stock_dim)
-        lower_list = [balance_lower, price_lower, asset_balance_lower]
+        balance_price_amounts = np.array([0] * (1 + (2 * self.stock_dim)))
+        lower_list = [balance_price_amounts]
 
         indicators_zero_bounded = ["boll_ub", "boll_lb", "rsi_30", "dx_30", "close_7_sma", "close_30_sma"]
         indicators_minus_one_bounded = ["macd", "cci_30"]
@@ -73,11 +75,9 @@ class CryptoEnvNormalizer:
         return observation_space_lower
 
     def _get_upper_bounds(self):
-        balance_upper = np.array([np.inf])
-        price_upper = np.array([1] * self.stock_dim)
-        asset_balance_upper = np.array([np.inf] * self.stock_dim)
 
-        upper_list = [balance_upper, price_upper, asset_balance_upper]
+        balance_price_amounts = np.array([1] * (1 + (2 * self.stock_dim)))
+        upper_list = [balance_price_amounts]
 
         normal_bounded_indicators = ["macd", "boll_ub", "boll_lb", "rsi_30", "cci_30", "dx_30", "close_7_sma",
                                      "close_30_sma"]
@@ -108,10 +108,14 @@ class CryptoEnvNormalizer:
         return transformed_data
 
     def get_normalized_state(self, day, original_state):
-        balance = original_state[0]
+        balance_t = self.balance_scaler.transform(np.array(original_state[0]).reshape(1, -1))[0][0]
         asset_amounts = original_state[1 + self.stock_dim:1 + (self.stock_dim * 2)]
+        asset_prices = original_state[1:self.stock_dim + 1]
+        asset_worth = np.multiply(asset_amounts, asset_prices)
+        total_value = np.sum(asset_worth) + original_state[0]
+        asset_share = asset_worth / total_value
         close_t = self.transformed_data['close'].loc[day].tolist()
-        transformed_indicators = sum((self.transformed_data[tech].loc[day].tolist() for tech in self.indicators), [])
-        normalized_state = ([balance] + close_t + asset_amounts + transformed_indicators)
+        indicator_t = sum((self.transformed_data[tech].loc[day].tolist() for tech in self.indicators), [])
+        normalized_state = ([balance_t] + close_t + asset_share.tolist() + indicator_t)
         return normalized_state
 
