@@ -28,7 +28,7 @@ class CustomTradingEnv(gym.Env):
                  action_space: int, tech_indicator_list: list[str], turbulence_threshold=None,
                  risk_indicator_col="turbulence", make_plots: bool = False, print_verbosity=20, day=0,
                  initial=True, previous_state=[], model_name="", mode="", iteration="", root_dir='.', seed=None,
-                 strategy_name="crypto_single", run_name="run1"):
+                 strategy_name="crypto_single", run_name="run1", random_initial=False):
         self.day = day
         self.df = df
         self.max_days = len(self.df.index.unique())
@@ -36,6 +36,7 @@ class CustomTradingEnv(gym.Env):
         self.hmax = hmax
         self.num_stock_shares = num_stock_shares  # initial amount of shares
         self.initial_amount = initial_amount  # get the initial cash
+        self.random_initial_amount = [0] * (1 + self.stock_dim)
         self.buy_cost_pct = buy_cost_pct
         self.sell_cost_pct = sell_cost_pct
         self.reward_scaling = reward_scaling
@@ -53,6 +54,7 @@ class CustomTradingEnv(gym.Env):
         self.turbulence_threshold = turbulence_threshold
         self.risk_indicator_col = risk_indicator_col
         self.initial = initial
+        self.random_initial = random_initial
         self.previous_state = previous_state
         self.model_name = model_name
         self.mode = mode
@@ -256,7 +258,7 @@ class CustomTradingEnv(gym.Env):
             }
 
             if not self.episode % self.print_verbosity:
-                if not self.episode % 1000:
+                if not self.episode % 500:
                     if self.make_plots:
                         self._make_plot()
 
@@ -356,7 +358,8 @@ class CustomTradingEnv(gym.Env):
 
         asset_prices = np.array(self.state[1: 1 + self.stock_dim])
         if self.initial:
-            self.asset_memory = [self.initial_amount + np.sum(np.array(self.num_stock_shares) * asset_prices)]
+            # self.asset_memory = [self.initial_amount + np.sum(np.array(self.num_stock_shares) * asset_prices)]
+            self.asset_memory = [self.state[0] + np.sum(np.array(self.state[1 + self.stock_dim:1 + 2 * self.stock_dim])* asset_prices) ]
         else:
             previous_asset_amounts = np.array(self.previous_state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
             previous_total_asset = self.previous_state[0] + sum(asset_prices * previous_asset_amounts)
@@ -383,17 +386,38 @@ class CustomTradingEnv(gym.Env):
     def render(self, mode="human", close=False):
         return self.state
 
+    def get_random_start_values(self):
+        probs = np.random.rand(1 + self.stock_dim)
+        money_bal = probs[0] * self.initial_amount
+        money_asset = self.initial_amount - money_bal
+        probs = np.delete(probs, 0)
+        ratio = probs / probs.sum()
+        money = (ratio * money_asset)
+        amount = money / self.data.close.tolist()
+        return [money_bal] + amount.tolist()
+
     def _initiate_state(self):
         if self.initial:
             # For Initial State
             if len(self.df.tic.unique()) > 1:
                 # for multiple stock
-                state = (
-                        [self.initial_amount]
+                if self.random_initial:
+                    self.random_initial_amount = self.get_random_start_values()
+                    state = (
+                        [self.random_initial_amount[0]]
                         + self.data.close.values.tolist()
-                        + self.num_stock_shares
+                        + self.random_initial_amount[1:self.stock_dim+1]
                         + sum((self.data[tech].values.tolist() for tech in self.tech_indicator_list), [])
-                )  # append initial stocks_share to initial state, instead of all zero
+                    )
+                    # print(state[0], state[11:21])
+                else:
+                    state = (
+                            [self.initial_amount]
+                            + self.data.close.values.tolist()
+                            + self.num_stock_shares
+                            + sum((self.data[tech].values.tolist() for tech in self.tech_indicator_list), [])
+                    )  # append initial stocks_share to initial state, instead of all zero
+
             else:
                 # for single stock
                 state = (
@@ -417,6 +441,7 @@ class CustomTradingEnv(gym.Env):
                         + self.previous_state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)]
                         + sum(([self.data[tech]] for tech in self.tech_indicator_list), [])
                 )
+
         return state
 
     def _update_state(self):
@@ -442,29 +467,6 @@ class CustomTradingEnv(gym.Env):
         else:
             date = self.data.date
         return date
-
-    # add save_state_memory to preserve state in the trading process
-    def save_state_memory(self):
-        if len(self.df.tic.unique()) > 1:
-            # date and close price length must match actions length
-            date_list = self.date_memory[:-1]
-            df_date = pd.DataFrame(date_list)
-            df_date.columns = ["date"]
-
-            state_list = self.state_memory
-            df_states = pd.DataFrame(
-                state_list,
-                columns=["cash", "Bitcoin_price", "Gold_price", "Bitcoin_num", "Gold_num",
-                         "Bitcoin_Disable", "Gold_Disable", ],
-            )
-            df_states.index = df_date.date
-            # df_actions = pd.DataFrame({'date':date_list,'actions':action_list})
-        else:
-            date_list = self.date_memory[:-1]
-            state_list = self.state_memory
-            df_states = pd.DataFrame({"date": date_list, "states": state_list})
-        # print(df_states)
-        return df_states
 
     def save_asset_memory(self):
         date_list = self.date_memory

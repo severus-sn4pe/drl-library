@@ -49,7 +49,7 @@ ENV_KWARGS = {
 MODEL_NAME = "A2C"
 model_params = {"n_steps": 16, "ent_coef": 1e-5, "learning_rate": 1e-3}  # get_model_params(MODEL_NAME)
 RUN_CONFIG = "V01"
-RUN_NAME = f"{RUN_CONFIG}_{get_run_timestamp()}_2M"
+RUN_NAME = f"{RUN_CONFIG}_{get_run_timestamp()}_debug"
 
 ENV_KWARGS['run_name'] = RUN_NAME
 ENV_KWARGS['model_name'] = MODEL_NAME
@@ -63,6 +63,8 @@ check_run_directory_structure(ROOT_DIR, config.RESULTS_DIR, STRATEGY_NAME, MODEL
 
 results_file_prefix = f"{ROOT_DIR}/{config.RESULTS_DIR}/{STRATEGY_NAME}/{MODEL_NAME}/{MODEL_NAME}_{RUN_NAME}"
 model_filename = f"{MODEL_DIR}/{STRATEGY_NAME}_{MODEL_NAME}_{RUN_NAME}"
+
+ENV_KWARGS['random_initial'] = True
 
 settings = {
     "total_timesteps": timesteps,
