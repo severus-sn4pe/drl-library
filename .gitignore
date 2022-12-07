@@ -15,3 +15,8 @@ notes.txt
 
 crypto_my_version_*.py
 crypto_my_version_*.ipynb
+scripts/data_exploration/plots/
+
+scripts/data_exploration/plots_coins/
+
+scripts/data_exploration/plots_performance/
