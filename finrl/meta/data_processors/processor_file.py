@@ -88,7 +88,7 @@ class FileProcessor:
         df = df.fillna(method='ffill').fillna(method='bfill')
         return df
 
-    def add_turbulence(self, data):
+    def add_turbulence(self, data, lookback_days=60):
         """
         add turbulence index from a precalcualted dataframe
         :param data: (df) pandas dataframe
@@ -96,28 +96,31 @@ class FileProcessor:
         """
         print(f"Adding turbulence index")
         df = data.copy()
-        turbulence_index = self.calculate_turbulence(df)
+        turbulence_index = self.calculate_turbulence(df, lookback_days)
         df = df.merge(turbulence_index, on="date")
         df = df.sort_values(["date", "tic"]).reset_index(drop=True)
         return df
 
-    def calculate_turbulence(self, data, time_period=252):
+    def calculate_turbulence(self, data, time_period):
         """calculate turbulence index"""
         # fixed look back period of 60 days, scaled depending on selected time_interval
+        print(self.time_interval, time_period)
         if self.time_interval == '1d':
-            time_period = 60
-        if self.time_interval == '6h':
-            time_period = 60 * 4
-        if self.time_interval == '12h':
-            time_period = 60 * 2
-        if self.time_interval == '1h':
-            time_period = 60 * 24
-        if self.time_interval == '30min':
-            time_period = 60 * 24 * 2
-        if self.time_interval == '5min':
-            time_period = 60 * 24 * 12
-        if self.time_interval == '1min':
-            time_period = 60 * 24 * 60
+            time_period = time_period
+        elif self.time_interval == '6h':
+            time_period = time_period * 4
+        elif self.time_interval == '12h':
+            time_period = time_period * 2
+        elif self.time_interval == '1h':
+            time_period = time_period * 24
+        elif self.time_interval == '30min':
+            time_period = time_period * 24 * 2
+        elif self.time_interval == '5min':
+            time_period = time_period * 24 * 12
+        elif self.time_interval == '1min':
+            time_period = time_period * 24 * 60
+        else:
+            time_period = 252
         print(f"Calculating Turbulence for {self.time_interval} res with lookback_period={time_period}")
         df = data.copy()
         df_price_pivot = df.pivot(index="date", columns="tic", values="close")
