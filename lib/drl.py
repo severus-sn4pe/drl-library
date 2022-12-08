@@ -134,8 +134,8 @@ def test(df, env_kwargs, settings):
                                  settings['tensorboard_log'])
 
     start = time.time()
-    df_account_value, df_actions = DRLAgent.DRL_prediction(model=model, environment=env)
+    df_state, df_actions = DRLAgent.DRL_prediction(model=model, environment=env)
     log_duration(start)
 
-    df_account_value.to_csv(f"{settings['file_prefix']}_portfolio_value.csv")
+    df_state.to_csv(f"{settings['file_prefix']}_state.csv")
     df_actions.to_csv(f"{settings['file_prefix']}_actions.csv")

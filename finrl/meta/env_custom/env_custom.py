@@ -268,18 +268,7 @@ class CustomTradingEnv(gym.Env):
                     filename_prefix = f"{self.run_name}_ep{self.episode:05.0f}"
                     df_actions.to_csv(f"{self.run_path}/{filename_prefix}_actions.csv")
 
-                    state_memory = pd.DataFrame(self.state_memory)
-                    state_memory.index = self.date_memory[:-1]
-                    if self.random_initial:
-                        init_state = pd.DataFrame([[self.random_initial_amount[0]] + self.df.loc[
-                            0].close.tolist() + self.random_initial_amount[1:self.stock_dim + 1]])
-                    else:
-                        init_state = pd.DataFrame(
-                            [[self.initial_amount] + self.df.loc[0].close.tolist() + self.num_stock_shares])
-                    state_memory = pd.concat([init_state, state_memory])
-                    state_memory.columns = self.state_memory_names
-                    state_memory['account_value'] = self.asset_memory
-                    state_memory['reward'] = [0] + self.rewards_memory
+                    state_memory = self.save_state_memory()
                     state_memory.to_csv(f"{self.run_path}/{filename_prefix}_state.csv")
         else:
             actions_unscaled = actions
@@ -326,7 +315,7 @@ class CustomTradingEnv(gym.Env):
             )
             self.reward = end_total_asset - begin_total_asset
             self.asset_memory[self.day] = end_total_asset
-            if not self.episode % self.print_verbosity:
+            if not self.episode % self.print_verbosity or self.mode == "test":
                 self.actions_memory.append(np.concatenate([actions, actions_unscaled]))
                 self.rewards_memory.append(self.reward)
                 self.state_memory.append(self.state[0:2 * self.stock_dim + 1])
@@ -463,6 +452,21 @@ class CustomTradingEnv(gym.Env):
             action_list = self.actions_memory
             df_actions = pd.DataFrame({"date": date_list, "actions": action_list})
         return df_actions
+
+    def save_state_memory(self):
+        state_memory = pd.DataFrame(self.state_memory)
+        state_memory.index = self.date_memory[:-1]
+        if self.random_initial:
+            init_state = pd.DataFrame([[self.random_initial_amount[0]] + self.df.loc[
+                0].close.tolist() + self.random_initial_amount[1:self.stock_dim + 1]])
+        else:
+            init_state = pd.DataFrame(
+                [[self.initial_amount] + self.df.loc[0].close.tolist() + self.num_stock_shares])
+        state_memory = pd.concat([init_state, state_memory])
+        state_memory.columns = self.state_memory_names
+        state_memory['account_value'] = self.asset_memory
+        state_memory['reward'] = [0] + self.rewards_memory
+        return state_memory
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
