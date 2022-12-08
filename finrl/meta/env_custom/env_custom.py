@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import math
 import gym
-# import csv
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,8 +14,6 @@ from finrl.meta.env_custom.crypto_env_normalizer import CryptoEnvNormalizer
 
 matplotlib.use("Agg")
 
-from stable_baselines3.common.logger import configure, Logger, KVWriter, CSVOutputFormat, TensorBoardOutputFormat
-
 
 class CustomTradingEnv(gym.Env):
     """A custom trading environment for OpenAI gym"""
@@ -26,9 +23,9 @@ class CustomTradingEnv(gym.Env):
     def __init__(self, df: pd.DataFrame, stock_dim: int, hmax: int, initial_amount: int, num_stock_shares: list[float],
                  buy_cost_pct: list[float], sell_cost_pct: list[float], reward_scaling: float, state_space: int,
                  action_space: int, tech_indicator_list: list[str], turbulence_threshold=None,
-                 risk_indicator_col="turbulence", make_plots: bool = False, print_verbosity=20, day=0,
+                 risk_indicator_col="turbulence", make_plots: bool = False, print_verbosity=200, day=0,
                  initial=True, previous_state=[], model_name="", mode="", iteration="", root_dir='.', seed=None,
-                 strategy_name="crypto_single", run_name="run1"):
+                 strategy_name="crypto_single", run_name="run1", random_initial=False):
         self.day = day
         self.df = df
         self.max_days = len(self.df.index.unique())
@@ -36,13 +33,13 @@ class CustomTradingEnv(gym.Env):
         self.hmax = hmax
         self.num_stock_shares = num_stock_shares  # initial amount of shares
         self.initial_amount = initial_amount  # get the initial cash
+        self.random_initial_amount = [0] * (1 + self.stock_dim)
         self.buy_cost_pct = buy_cost_pct
         self.sell_cost_pct = sell_cost_pct
         self.reward_scaling = reward_scaling
         self.state_space = state_space
         self.action_space = action_space
         self.tech_indicator_list = tech_indicator_list
-        self._generate_action_normalizer()
         self.action_space = spaces.Box(low=-1, high=1, shape=(self.action_space,))
         self.env_normalizer = CryptoEnvNormalizer(stock_dim, tech_indicator_list, state_space, df)
         self.observation_space = self.env_normalizer.get_observation_space()
@@ -53,6 +50,7 @@ class CustomTradingEnv(gym.Env):
         self.turbulence_threshold = turbulence_threshold
         self.risk_indicator_col = risk_indicator_col
         self.initial = initial
+        self.random_initial = random_initial
         self.previous_state = previous_state
         self.model_name = model_name
         self.mode = mode
@@ -75,16 +73,18 @@ class CustomTradingEnv(gym.Env):
 
         # memorize all the total balance change
         # the initial total asset is calculated by cash + sum (num_share_stock_i * price_stock_i)
-        self.asset_memory = [self.initial_amount + np.sum(np.array(self.num_stock_shares)
-                                                          * np.array(self.state[1: 1 + self.stock_dim]))]
+        self.asset_memory_buffer_size = len(self.df.date.unique())
+        self.empty_asset_buffer = [0] * self.asset_memory_buffer_size
+        self.asset_memory = self.empty_asset_buffer
+        self.asset_memory[0] = self.initial_amount + np.sum(np.array(self.num_stock_shares)
+                                                            * np.array(self.state[1: 1 + self.stock_dim]))
         self.rewards_memory = []
         self.actions_memory = []
-        self.cash_memory = []
-        self.state_memory = ([])  # we need sometimes to preserve the state in the middle of trading process
-        self.date_memory = [self._get_date()]
-        # self.logger = Logger('results',[CSVOutputFormat])
-        # self.logger = configure('results')
-        # self.reset()
+        self.state_memory = ([])
+        self.date_memory = self.df.date.unique().tolist()
+        self.stock_names = self.df.tic.unique().tolist()
+        self.state_memory_names = [
+            ["cash"] + [x + "_price" for x in self.stock_names] + [x + "_amount" for x in self.stock_names]]
 
         self._seed(seed)
 
@@ -205,11 +205,11 @@ class CustomTradingEnv(gym.Env):
 
         df_total_value = pd.DataFrame(self.asset_memory)
         df_total_value.columns = ["account_value"]
-        df_total_value["date"] = self.date_memory
         daily_return = df_total_value["account_value"].pct_change(1)
 
         # sharpe
         if daily_return.std() != 0:
+            # TODO: improve for intraday trading
             sharpe = ((365 ** 0.5) * daily_return.mean() / daily_return.std())
 
         # sortino
@@ -223,21 +223,11 @@ class CustomTradingEnv(gym.Env):
         self.terminal = self.day >= len(self.df.index.unique()) - 1
         if self.terminal:
             # print(f"Episode: {self.episode}")
-
             last_prices = np.array(self.state[1: (self.stock_dim + 1)])
             last_amounts = np.array(self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
             end_total_asset = self.state[0] + sum(last_prices * last_amounts)
 
             tot_reward = end_total_asset - self.asset_memory[0]
-
-            df_rewards = pd.DataFrame(self.rewards_memory)
-            df_rewards.columns = ["account_rewards"]
-            df_rewards["date"] = self.date_memory[:-1]
-            df_rewards.index = df_rewards.date
-            df_cash = pd.DataFrame(self.cash_memory)
-            df_cash.columns = ["cash_balance"]
-            df_cash["date"] = self.date_memory[:-1]
-            df_cash.index = df_cash.date
 
             sharpe, sortino = self.get_sharpe_sortino()
 
@@ -256,9 +246,8 @@ class CustomTradingEnv(gym.Env):
             }
 
             if not self.episode % self.print_verbosity:
-                if not self.episode % 1000:
-                    if self.make_plots:
-                        self._make_plot()
+                if self.make_plots:
+                    self._make_plot()
 
                 stats_df = pd.DataFrame([stats])
                 stats_df.to_csv(f"{self.main_path}/episode_stats.csv", header=False, index=False, mode='a')
@@ -274,40 +263,39 @@ class CustomTradingEnv(gym.Env):
                 print(f"Sortino: {sortino:0.3f}")
                 print("=================================")
 
-                # if (self.model_name != "") and (self.mode != ""):
-                #     df_actions = self.save_action_memory()
-                #     filename_suffix = f"{self.mode}_{self.model_name}_{self.episode}"
-                #     df_actions.to_csv(f"{self.root_dir}/results/actions_{filename_suffix}.csv")
-                #     df_total_value.to_csv(f"{self.root_dir}/results/account_value_{filename_suffix}.csv", index=False)
-                #     df_rewards.to_csv(f"{self.root_dir}/results/account_rewards_{filename_suffix}.csv", index=False)
-                #     df_cash.to_csv(f"{self.root_dir}/results/cash_balance_{filename_suffix}.csv", index=False)
-                #     plt.plot(self.asset_memory, "r")
-                #     plt.savefig(f"{self.root_dir}/results/account_value_{filename_suffix}.png", index=False)
-                #     plt.close()
-                #
-                #     # Add outputs to logger interface
-                #     self.logger.record("environment/portfolio_value", end_total_asset)
-                #     self.logger.record("environment/total_reward", tot_reward)
-                #     self.logger.record("environment/total_reward_pct",
-                #                        (tot_reward / (end_total_asset - tot_reward)) * 100)
-                #     self.logger.record("environment/total_cost", self.cost)
-                #     self.logger.record("environment/total_trades", self.trades)
+                if (self.model_name != "") and (self.mode != ""):
+                    df_actions = self.save_action_memory()
+                    filename_prefix = f"{self.run_name}_ep{self.episode:05.0f}"
+                    df_actions.to_csv(f"{self.run_path}/{filename_prefix}_actions.csv")
 
-            return self.state, self.reward, self.terminal, {}
-
+                    state_memory = pd.DataFrame(self.state_memory)
+                    state_memory.index = self.date_memory[:-1]
+                    if self.random_initial:
+                        init_state = pd.DataFrame([[self.random_initial_amount[0]] + self.df.loc[
+                            0].close.tolist() + self.random_initial_amount[1:self.stock_dim + 1]])
+                    else:
+                        init_state = pd.DataFrame(
+                            [[self.initial_amount] + self.df.loc[0].close.tolist() + self.num_stock_shares])
+                    state_memory = pd.concat([init_state, state_memory])
+                    state_memory.columns = self.state_memory_names
+                    state_memory['account_value'] = self.asset_memory
+                    state_memory['reward'] = [0] + self.rewards_memory
+                    state_memory.to_csv(f"{self.run_path}/{filename_prefix}_state.csv")
         else:
-            actions = actions * self.action_norm_vector
+            actions_unscaled = actions
+            actions = actions * self._get_action_normalizer()
 
             if self.turbulence_threshold is not None:
                 if self.turbulence >= self.turbulence_threshold:
                     actions = np.array([-self.hmax] * self.stock_dim)
+
             begin_total_asset = self.state[0] + sum(
                 np.array(self.state[1: (self.stock_dim + 1)])
                 * np.array(self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
             )
             # print("begin_total_asset:{}".format(begin_total_asset))
 
-            argsort_actions = np.argsort(actions)
+            argsort_actions = np.argsort(actions_unscaled)
             sell_index = argsort_actions[: np.where(actions < 0)[0].shape[0]]
             buy_index = argsort_actions[::-1][: np.where(actions > 0)[0].shape[0]]
 
@@ -321,8 +309,6 @@ class CustomTradingEnv(gym.Env):
             for index in buy_index:
                 # print('take buy action: {}'.format(actions[index]))
                 actions[index] = self._buy_stock(index, actions[index])
-
-            self.actions_memory.append(actions)
 
             # state: s -> s+1
             self.day += 1
@@ -338,32 +324,34 @@ class CustomTradingEnv(gym.Env):
                 np.array(self.state[1: (self.stock_dim + 1)])
                 * np.array(self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
             )
-            self.asset_memory.append(end_total_asset)
-            self.cash_memory.append(self.state[0])
-            self.date_memory.append(self._get_date())
             self.reward = end_total_asset - begin_total_asset
-            self.rewards_memory.append(self.reward)
+            self.asset_memory[self.day] = end_total_asset
+            if not self.episode % self.print_verbosity:
+                self.actions_memory.append(np.concatenate([actions, actions_unscaled]))
+                self.rewards_memory.append(self.reward)
+                self.state_memory.append(self.state[0:2 * self.stock_dim + 1])
             self.reward = self.reward * self.reward_scaling
-            self.state_memory.append(self.state)  # add current state in state_recorder for each step
 
         normalized_state = self.env_normalizer.get_normalized_state(self.day, self.state)
         return normalized_state, self.reward, self.terminal, {}
-        # return self.state, self.reward, self.terminal, {}
 
     def reset(self):
+        self.day = 0
+        self.data = self.df.loc[self.day, :]  # has to be reset before _initiate_state()
+
         # initiate state
         self.state = self._initiate_state()
 
         asset_prices = np.array(self.state[1: 1 + self.stock_dim])
+        self.asset_memory = self.empty_asset_buffer
         if self.initial:
-            self.asset_memory = [self.initial_amount + np.sum(np.array(self.num_stock_shares) * asset_prices)]
+            self.asset_memory[0] = self.state[0] + np.sum(
+                np.array(self.state[1 + self.stock_dim:1 + 2 * self.stock_dim]) * asset_prices)
         else:
             previous_asset_amounts = np.array(self.previous_state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
             previous_total_asset = self.previous_state[0] + sum(asset_prices * previous_asset_amounts)
-            self.asset_memory = [previous_total_asset]
+            self.asset_memory[0] = previous_total_asset
 
-        self.day = 0
-        self.data = self.df.loc[self.day, :]
         self.turbulence = 0
         self.cost = 0
         self.trades = 0
@@ -371,9 +359,8 @@ class CustomTradingEnv(gym.Env):
         self.terminal = False
         # self.iteration=self.iteration
         self.rewards_memory = []
-        self.cash_memory = []
         self.actions_memory = []
-        self.date_memory = [self._get_date()]
+        self.state_memory = []
 
         self.episode += 1
 
@@ -383,17 +370,38 @@ class CustomTradingEnv(gym.Env):
     def render(self, mode="human", close=False):
         return self.state
 
+    def get_random_start_values(self):
+        probs = np.random.rand(1 + self.stock_dim)
+        money_bal = probs[0] * self.initial_amount
+        money_asset = self.initial_amount - money_bal
+        probs = np.delete(probs, 0)
+        ratio = probs / probs.sum()
+        money = (ratio * money_asset)
+        amount = money / self.data.close.tolist()
+        return [money_bal] + amount.tolist()
+
     def _initiate_state(self):
         if self.initial:
             # For Initial State
             if len(self.df.tic.unique()) > 1:
                 # for multiple stock
-                state = (
-                        [self.initial_amount]
-                        + self.data.close.values.tolist()
-                        + self.num_stock_shares
-                        + sum((self.data[tech].values.tolist() for tech in self.tech_indicator_list), [])
-                )  # append initial stocks_share to initial state, instead of all zero
+                if self.random_initial:
+                    self.random_initial_amount = self.get_random_start_values()
+                    state = (
+                            [self.random_initial_amount[0]]
+                            + self.data.close.values.tolist()
+                            + self.random_initial_amount[1:self.stock_dim + 1]
+                            + sum((self.data[tech].values.tolist() for tech in self.tech_indicator_list), [])
+                    )
+                    # print(state[0], state[11:21])
+                else:
+                    state = (
+                            [self.initial_amount]
+                            + self.data.close.values.tolist()
+                            + self.num_stock_shares
+                            + sum((self.data[tech].values.tolist() for tech in self.tech_indicator_list), [])
+                    )  # append initial stocks_share to initial state, instead of all zero
+
             else:
                 # for single stock
                 state = (
@@ -417,6 +425,7 @@ class CustomTradingEnv(gym.Env):
                         + self.previous_state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)]
                         + sum(([self.data[tech]] for tech in self.tech_indicator_list), [])
                 )
+
         return state
 
     def _update_state(self):
@@ -436,44 +445,6 @@ class CustomTradingEnv(gym.Env):
             )
         return state
 
-    def _get_date(self):
-        if len(self.df.tic.unique()) > 1:
-            date = self.data.date.unique()[0]
-        else:
-            date = self.data.date
-        return date
-
-    # add save_state_memory to preserve state in the trading process
-    def save_state_memory(self):
-        if len(self.df.tic.unique()) > 1:
-            # date and close price length must match actions length
-            date_list = self.date_memory[:-1]
-            df_date = pd.DataFrame(date_list)
-            df_date.columns = ["date"]
-
-            state_list = self.state_memory
-            df_states = pd.DataFrame(
-                state_list,
-                columns=["cash", "Bitcoin_price", "Gold_price", "Bitcoin_num", "Gold_num",
-                         "Bitcoin_Disable", "Gold_Disable", ],
-            )
-            df_states.index = df_date.date
-            # df_actions = pd.DataFrame({'date':date_list,'actions':action_list})
-        else:
-            date_list = self.date_memory[:-1]
-            state_list = self.state_memory
-            df_states = pd.DataFrame({"date": date_list, "states": state_list})
-        # print(df_states)
-        return df_states
-
-    def save_asset_memory(self):
-        date_list = self.date_memory
-        asset_list = self.asset_memory
-        # print(len(date_list))
-        # print(len(asset_list))
-        df_account_value = pd.DataFrame({"date": date_list, "account_value": asset_list})
-        return df_account_value
-
     def save_action_memory(self):
         if len(self.df.tic.unique()) > 1:
             # date and close price length must match actions length
@@ -483,7 +454,8 @@ class CustomTradingEnv(gym.Env):
 
             action_list = self.actions_memory
             df_actions = pd.DataFrame(action_list)
-            df_actions.columns = self.data.tic.values
+            df_actions.columns = np.concatenate(
+                [self.data.tic.values, [x + "_u" for x in self.data.tic.values]])  # self.data.tic.values
             df_actions.index = df_date.date
             # df_actions = pd.DataFrame({'date':date_list,'actions':action_list})
         else:
@@ -501,14 +473,5 @@ class CustomTradingEnv(gym.Env):
         obs = e.reset()
         return e, obs
 
-    def _generate_action_normalizer(self):
-        # normalize action to adjust for large price differences in cryptocurrencies
-        action_norm_vector = []
-        price_0 = self.df[0:self.stock_dim].close.tolist()  # Use row 0 prices to normalize
-        for price in price_0:
-            x = math.floor(math.log(price, 10))  # the order of magnitude
-            action_norm_vector.append(1 / (10 ** x))
-
-        action_norm_vector = (np.asarray(action_norm_vector) * 10000)  # roughly control max tx amount for each action
-        # print(f"action normalizer: {action_norm_vector}")
-        self.action_norm_vector = np.asarray(action_norm_vector)
+    def _get_action_normalizer(self):
+        return (100_000 / self.data.close).tolist()  # maximum amount of $ each action can hold

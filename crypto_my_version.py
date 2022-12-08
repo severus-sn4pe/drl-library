@@ -12,7 +12,6 @@ STRATEGY_NAME = "cs"
 MODEL_DIR = f"{ROOT_DIR}/{config.TRAINED_MODEL_DIR}/{STRATEGY_NAME}"
 TENSORBOARD_DIR = f"./tensorboard_log/{STRATEGY_NAME}"
 
-
 # loading dataset
 df = pd.read_csv(f"{config.DATA_SAVE_DIR}/thesis/crypto_1d_plus.csv", index_col=0)
 train_df = data_split(df, crypto.TRAIN_START_DATE, crypto.TRAIN_END_DATE)
@@ -42,17 +41,19 @@ ENV_KWARGS = {
     "mode": "train",
     "strategy_name": STRATEGY_NAME,
     "run_name": "PLACEHOLDER",
-    "model_name": "PLACEHOLDER"
+    "model_name": "PLACEHOLDER",
 }
 
 # Settings
 MODEL_NAME = "A2C"
-model_params = {"n_steps": 16, "ent_coef": 1e-5, "learning_rate": 1e-3}  # get_model_params(MODEL_NAME)
+model_params = {"n_steps": 16, "ent_coef": 1e-5, "learning_rate": 1e-3, "device": "cpu"}  # get_model_params(MODEL_NAME)
 RUN_CONFIG = "V01"
-RUN_NAME = f"{RUN_CONFIG}_{get_run_timestamp()}_2M"
+RUN_NAME = f"{RUN_CONFIG}_{get_run_timestamp()}_debug"
 
 ENV_KWARGS['run_name'] = RUN_NAME
 ENV_KWARGS['model_name'] = MODEL_NAME
+ENV_KWARGS['random_initial'] = False
+
 timesteps = 2_000_000
 
 retrain_existing_model = False
