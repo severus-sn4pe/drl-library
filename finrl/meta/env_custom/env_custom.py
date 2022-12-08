@@ -289,6 +289,8 @@ class CustomTradingEnv(gym.Env):
                     state_memory['reward'] = [0] + self.rewards_memory
                     state_memory.to_csv(f"{self.run_path}/{filename_prefix}_state.csv")
         else:
+            actions_unscaled = actions
+            actions = actions * self._get_action_normalizer()
 
             if self.turbulence_threshold is not None:
                 if self.turbulence >= self.turbulence_threshold:
@@ -300,7 +302,7 @@ class CustomTradingEnv(gym.Env):
             )
             # print("begin_total_asset:{}".format(begin_total_asset))
 
-            argsort_actions = np.argsort(actions)
+            argsort_actions = np.argsort(actions_unscaled)
             sell_index = argsort_actions[: np.where(actions < 0)[0].shape[0]]
             buy_index = argsort_actions[::-1][: np.where(actions > 0)[0].shape[0]]
 
