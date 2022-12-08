@@ -86,13 +86,13 @@ class DRLAgent:
             # actions_memory = test_env.env_method(method_name="save_action_memory")
             test_obs, rewards, dones, info = test_env.step(action)
             if i == (len(environment.df.index.unique()) - 2):
-                account_memory = test_env.env_method(method_name="save_asset_memory")
+                state_memory = test_env.env_method(method_name="save_state_memory")
                 actions_memory = test_env.env_method(method_name="save_action_memory")
             # state_memory=test_env.env_method(method_name="save_state_memory") # add current state to state memory
             if dones[0]:
                 print(f"done in step {i}!")
                 break
-        return account_memory[0], actions_memory[0]
+        return state_memory[0], actions_memory[0]
 
     @staticmethod
     def DRL_prediction_load_from_file(model_name, environment, cwd, deterministic=True):
