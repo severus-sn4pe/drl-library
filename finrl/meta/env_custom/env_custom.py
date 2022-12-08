@@ -43,7 +43,6 @@ class CustomTradingEnv(gym.Env):
         self.state_space = state_space
         self.action_space = action_space
         self.tech_indicator_list = tech_indicator_list
-        self._generate_action_normalizer()
         self.action_space = spaces.Box(low=-1, high=1, shape=(self.action_space,))
         self.env_normalizer = CryptoEnvNormalizer(stock_dim, tech_indicator_list, state_space, df)
         self.observation_space = self.env_normalizer.get_observation_space()
@@ -359,8 +358,6 @@ class CustomTradingEnv(gym.Env):
             previous_total_asset = self.previous_state[0] + sum(asset_prices * previous_asset_amounts)
             self.asset_memory[0] = previous_total_asset
 
-        self.day = 0
-        self.data = self.df.loc[self.day, :]
         self.turbulence = 0
         self.cost = 0
         self.trades = 0
@@ -397,10 +394,10 @@ class CustomTradingEnv(gym.Env):
                 if self.random_initial:
                     self.random_initial_amount = self.get_random_start_values()
                     state = (
-                        [self.random_initial_amount[0]]
-                        + self.data.close.values.tolist()
-                        + self.random_initial_amount[1:self.stock_dim+1]
-                        + sum((self.data[tech].values.tolist() for tech in self.tech_indicator_list), [])
+                            [self.random_initial_amount[0]]
+                            + self.data.close.values.tolist()
+                            + self.random_initial_amount[1:self.stock_dim + 1]
+                            + sum((self.data[tech].values.tolist() for tech in self.tech_indicator_list), [])
                     )
                     # print(state[0], state[11:21])
                 else:
@@ -482,14 +479,5 @@ class CustomTradingEnv(gym.Env):
         obs = e.reset()
         return e, obs
 
-    def _generate_action_normalizer(self):
-        # normalize action to adjust for large price differences in cryptocurrencies
-        action_norm_vector = []
-        price_0 = self.df[0:self.stock_dim].close.tolist()  # Use row 0 prices to normalize
-        for price in price_0:
-            x = math.floor(math.log(price, 10))  # the order of magnitude
-            action_norm_vector.append(1 / (10 ** x))
-
-        action_norm_vector = (np.asarray(action_norm_vector) * 10000)  # roughly control max tx amount for each action
-        # print(f"action normalizer: {action_norm_vector}")
-        self.action_norm_vector = np.asarray(action_norm_vector)
+    def _get_action_normalizer(self):
+        return (100_000 / self.data.close).tolist()  # maximum amount of $ each action can hold
