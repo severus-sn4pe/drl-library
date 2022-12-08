@@ -108,14 +108,18 @@ class CryptoEnvNormalizer:
         return transformed_data
 
     def get_normalized_state(self, day, original_state):
-        balance_t = self.balance_scaler.transform(np.array(original_state[0]).reshape(1, -1))[0][0]
+        cash_balance = original_state[0]
         asset_amounts = original_state[1 + self.stock_dim:1 + (self.stock_dim * 2)]
         asset_prices = original_state[1:self.stock_dim + 1]
+
         asset_worth = np.multiply(asset_amounts, asset_prices)
-        total_value = np.sum(asset_worth) + original_state[0]
+        total_value = np.sum(asset_worth) + cash_balance
         asset_share = asset_worth / total_value
+        cash_share = cash_balance / total_value
+        # balance_t = self.balance_scaler.transform(np.array(cash_balance).reshape(1, -1))[0][0]
+
         close_t = self.transformed_data['close'].loc[day].tolist()
         indicator_t = sum((self.transformed_data[tech].loc[day].tolist() for tech in self.indicators), [])
-        normalized_state = ([balance_t] + close_t + asset_share.tolist() + indicator_t)
+        normalized_state = ([cash_share] + close_t + asset_share.tolist() + indicator_t)
         return normalized_state
 
