@@ -77,16 +77,21 @@ class CustomTradingEnv(gym.Env):
 
         # memorize all the total balance change
         # the initial total asset is calculated by cash + sum (num_share_stock_i * price_stock_i)
-        self.asset_memory = [self.initial_amount + np.sum(np.array(self.num_stock_shares)
-                                                          * np.array(self.state[1: 1 + self.stock_dim]))]
+        self.asset_memory_buffer_size = len(self.df.date.unique())
+        self.empty_asset_buffer = [0] * self.asset_memory_buffer_size
+        self.asset_memory = self.empty_asset_buffer
+        self.asset_memory[0] = self.initial_amount + np.sum(np.array(self.num_stock_shares)
+                                                            * np.array(self.state[1: 1 + self.stock_dim]))
         self.rewards_memory = []
         self.actions_memory = []
-        self.cash_memory = []
-        self.state_memory = ([])  # we need sometimes to preserve the state in the middle of trading process
-        self.date_memory = [self._get_date()]
+        self.state_memory = ([])
+        self.date_memory = self.df.date.unique().tolist()
         # self.logger = Logger('results',[CSVOutputFormat])
         # self.logger = configure('results')
         # self.reset()
+        self.stock_names = self.df.tic.unique().tolist()
+        self.state_memory_names = [
+            ["cash"] + [x + "_price" for x in self.stock_names] + [x + "_amount" for x in self.stock_names]]
 
         self._seed(seed)
 
@@ -207,7 +212,6 @@ class CustomTradingEnv(gym.Env):
 
         df_total_value = pd.DataFrame(self.asset_memory)
         df_total_value.columns = ["account_value"]
-        df_total_value["date"] = self.date_memory
         daily_return = df_total_value["account_value"].pct_change(1)
 
         # sharpe
@@ -266,33 +270,30 @@ class CustomTradingEnv(gym.Env):
                 print(f"Sortino: {sortino:0.3f}")
                 print("=================================")
 
-                # if (self.model_name != "") and (self.mode != ""):
-                #     df_actions = self.save_action_memory()
-                #     filename_suffix = f"{self.mode}_{self.model_name}_{self.episode}"
-                #     df_actions.to_csv(f"{self.root_dir}/results/actions_{filename_suffix}.csv")
-                #     df_total_value.to_csv(f"{self.root_dir}/results/account_value_{filename_suffix}.csv", index=False)
-                #     df_rewards.to_csv(f"{self.root_dir}/results/account_rewards_{filename_suffix}.csv", index=False)
-                #     df_cash.to_csv(f"{self.root_dir}/results/cash_balance_{filename_suffix}.csv", index=False)
-                #     plt.plot(self.asset_memory, "r")
-                #     plt.savefig(f"{self.root_dir}/results/account_value_{filename_suffix}.png", index=False)
-                #     plt.close()
-                #
-                #     # Add outputs to logger interface
-                #     self.logger.record("environment/portfolio_value", end_total_asset)
-                #     self.logger.record("environment/total_reward", tot_reward)
-                #     self.logger.record("environment/total_reward_pct",
-                #                        (tot_reward / (end_total_asset - tot_reward)) * 100)
-                #     self.logger.record("environment/total_cost", self.cost)
-                #     self.logger.record("environment/total_trades", self.trades)
+                if (self.model_name != "") and (self.mode != ""):
+                    df_actions = self.save_action_memory()
+                    filename_prefix = f"{self.run_name}_ep{self.episode:05.0f}"
+                    df_actions.to_csv(f"{self.run_path}/{filename_prefix}_actions.csv")
 
-            return self.state, self.reward, self.terminal, {}
-
+                    state_memory = pd.DataFrame(self.state_memory)
+                    state_memory.index = self.date_memory[:-1]
+                    if self.random_initial:
+                        init_state = pd.DataFrame([[self.random_initial_amount[0]] + self.df.loc[
+                            0].close.tolist() + self.random_initial_amount[1:self.stock_dim + 1]])
+                    else:
+                        init_state = pd.DataFrame(
+                            [[self.initial_amount] + self.df.loc[0].close.tolist() + self.num_stock_shares])
+                    state_memory = pd.concat([init_state, state_memory])
+                    state_memory.columns = self.state_memory_names
+                    state_memory['account_value'] = self.asset_memory
+                    state_memory['reward'] = [0] + self.rewards_memory
+                    state_memory.to_csv(f"{self.run_path}/{filename_prefix}_state.csv")
         else:
-            actions = actions * self.action_norm_vector
 
             if self.turbulence_threshold is not None:
                 if self.turbulence >= self.turbulence_threshold:
                     actions = np.array([-self.hmax] * self.stock_dim)
+
             begin_total_asset = self.state[0] + sum(
                 np.array(self.state[1: (self.stock_dim + 1)])
                 * np.array(self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
@@ -314,8 +315,6 @@ class CustomTradingEnv(gym.Env):
                 # print('take buy action: {}'.format(actions[index]))
                 actions[index] = self._buy_stock(index, actions[index])
 
-            self.actions_memory.append(actions)
-
             # state: s -> s+1
             self.day += 1
             self.data = self.df.loc[self.day, :]
@@ -330,30 +329,33 @@ class CustomTradingEnv(gym.Env):
                 np.array(self.state[1: (self.stock_dim + 1)])
                 * np.array(self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
             )
-            self.asset_memory.append(end_total_asset)
-            self.cash_memory.append(self.state[0])
-            self.date_memory.append(self._get_date())
             self.reward = end_total_asset - begin_total_asset
-            self.rewards_memory.append(self.reward)
+            self.asset_memory[self.day] = end_total_asset
+            if not self.episode % self.print_verbosity:
+                self.actions_memory.append(np.concatenate([actions, actions_unscaled]))
+                self.rewards_memory.append(self.reward)
+                self.state_memory.append(self.state[0:2 * self.stock_dim + 1])
             self.reward = self.reward * self.reward_scaling
-            self.state_memory.append(self.state)  # add current state in state_recorder for each step
 
         normalized_state = self.env_normalizer.get_normalized_state(self.day, self.state)
         return normalized_state, self.reward, self.terminal, {}
-        # return self.state, self.reward, self.terminal, {}
 
     def reset(self):
+        self.day = 0
+        self.data = self.df.loc[self.day, :]  # has to be reset before _initiate_state()
+
         # initiate state
         self.state = self._initiate_state()
 
         asset_prices = np.array(self.state[1: 1 + self.stock_dim])
+        self.asset_memory = self.empty_asset_buffer
         if self.initial:
-            # self.asset_memory = [self.initial_amount + np.sum(np.array(self.num_stock_shares) * asset_prices)]
-            self.asset_memory = [self.state[0] + np.sum(np.array(self.state[1 + self.stock_dim:1 + 2 * self.stock_dim])* asset_prices) ]
+            self.asset_memory[0] = self.state[0] + np.sum(
+                np.array(self.state[1 + self.stock_dim:1 + 2 * self.stock_dim]) * asset_prices)
         else:
             previous_asset_amounts = np.array(self.previous_state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
             previous_total_asset = self.previous_state[0] + sum(asset_prices * previous_asset_amounts)
-            self.asset_memory = [previous_total_asset]
+            self.asset_memory[0] = previous_total_asset
 
         self.day = 0
         self.data = self.df.loc[self.day, :]
@@ -364,9 +366,8 @@ class CustomTradingEnv(gym.Env):
         self.terminal = False
         # self.iteration=self.iteration
         self.rewards_memory = []
-        self.cash_memory = []
         self.actions_memory = []
-        self.date_memory = [self._get_date()]
+        self.state_memory = []
 
         self.episode += 1
 
@@ -451,21 +452,6 @@ class CustomTradingEnv(gym.Env):
             )
         return state
 
-    def _get_date(self):
-        if len(self.df.tic.unique()) > 1:
-            date = self.data.date.unique()[0]
-        else:
-            date = self.data.date
-        return date
-
-    def save_asset_memory(self):
-        date_list = self.date_memory
-        asset_list = self.asset_memory
-        # print(len(date_list))
-        # print(len(asset_list))
-        df_account_value = pd.DataFrame({"date": date_list, "account_value": asset_list})
-        return df_account_value
-
     def save_action_memory(self):
         if len(self.df.tic.unique()) > 1:
             # date and close price length must match actions length
@@ -475,7 +461,8 @@ class CustomTradingEnv(gym.Env):
 
             action_list = self.actions_memory
             df_actions = pd.DataFrame(action_list)
-            df_actions.columns = self.data.tic.values
+            df_actions.columns = np.concatenate(
+                [self.data.tic.values, [x + "_u" for x in self.data.tic.values]])  # self.data.tic.values
             df_actions.index = df_date.date
             # df_actions = pd.DataFrame({'date':date_list,'actions':action_list})
         else:
