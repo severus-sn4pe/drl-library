@@ -26,7 +26,7 @@ class CustomTradingEnv(gym.Env):
     def __init__(self, df: pd.DataFrame, stock_dim: int, hmax: int, initial_amount: int, num_stock_shares: list[float],
                  buy_cost_pct: list[float], sell_cost_pct: list[float], reward_scaling: float, state_space: int,
                  action_space: int, tech_indicator_list: list[str], turbulence_threshold=None,
-                 risk_indicator_col="turbulence", make_plots: bool = False, print_verbosity=20, day=0,
+                 risk_indicator_col="turbulence", make_plots: bool = False, print_verbosity=200, day=0,
                  initial=True, previous_state=[], model_name="", mode="", iteration="", root_dir='.', seed=None,
                  strategy_name="crypto_single", run_name="run1", random_initial=False):
         self.day = day
@@ -212,6 +212,7 @@ class CustomTradingEnv(gym.Env):
 
         # sharpe
         if daily_return.std() != 0:
+            # TODO: improve for intraday trading
             sharpe = ((365 ** 0.5) * daily_return.mean() / daily_return.std())
 
         # sortino
@@ -225,21 +226,11 @@ class CustomTradingEnv(gym.Env):
         self.terminal = self.day >= len(self.df.index.unique()) - 1
         if self.terminal:
             # print(f"Episode: {self.episode}")
-
             last_prices = np.array(self.state[1: (self.stock_dim + 1)])
             last_amounts = np.array(self.state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
             end_total_asset = self.state[0] + sum(last_prices * last_amounts)
 
             tot_reward = end_total_asset - self.asset_memory[0]
-
-            df_rewards = pd.DataFrame(self.rewards_memory)
-            df_rewards.columns = ["account_rewards"]
-            df_rewards["date"] = self.date_memory[:-1]
-            df_rewards.index = df_rewards.date
-            df_cash = pd.DataFrame(self.cash_memory)
-            df_cash.columns = ["cash_balance"]
-            df_cash["date"] = self.date_memory[:-1]
-            df_cash.index = df_cash.date
 
             sharpe, sortino = self.get_sharpe_sortino()
 
@@ -258,9 +249,8 @@ class CustomTradingEnv(gym.Env):
             }
 
             if not self.episode % self.print_verbosity:
-                if not self.episode % 500:
-                    if self.make_plots:
-                        self._make_plot()
+                if self.make_plots:
+                    self._make_plot()
 
                 stats_df = pd.DataFrame([stats])
                 stats_df.to_csv(f"{self.main_path}/episode_stats.csv", header=False, index=False, mode='a')
