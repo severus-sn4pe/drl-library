@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import math
 import gym
-# import csv
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,8 +13,6 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from finrl.meta.env_custom.crypto_env_normalizer import CryptoEnvNormalizer
 
 matplotlib.use("Agg")
-
-from stable_baselines3.common.logger import configure, Logger, KVWriter, CSVOutputFormat, TensorBoardOutputFormat
 
 
 class CustomTradingEnv(gym.Env):
@@ -85,9 +82,6 @@ class CustomTradingEnv(gym.Env):
         self.actions_memory = []
         self.state_memory = ([])
         self.date_memory = self.df.date.unique().tolist()
-        # self.logger = Logger('results',[CSVOutputFormat])
-        # self.logger = configure('results')
-        # self.reset()
         self.stock_names = self.df.tic.unique().tolist()
         self.state_memory_names = [
             ["cash"] + [x + "_price" for x in self.stock_names] + [x + "_amount" for x in self.stock_names]]
