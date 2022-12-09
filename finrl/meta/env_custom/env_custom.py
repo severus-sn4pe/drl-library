@@ -55,6 +55,7 @@ class CustomTradingEnv(gym.Env):
         self.previous_state = previous_state
         self.model_name = model_name
         self.mode = mode
+        self.random_init.mode = mode
         self.iteration = iteration
         self.reward = 0
         self.turbulence = 0
