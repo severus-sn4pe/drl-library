@@ -11,6 +11,7 @@ from gym.utils import seeding
 from stable_baselines3.common.vec_env import DummyVecEnv
 
 from finrl.meta.env_custom.crypto_env_normalizer import CryptoEnvNormalizer
+from finrl.meta.env_custom.random_init import RandomInit
 
 matplotlib.use("Agg")
 
@@ -25,7 +26,7 @@ class CustomTradingEnv(gym.Env):
                  action_space: int, tech_indicator_list: list[str], turbulence_threshold=None,
                  risk_indicator_col="turbulence", make_plots: bool = False, print_verbosity=200, day=0,
                  initial=True, previous_state=[], model_name="", mode="", iteration="", root_dir='.', seed=None,
-                 strategy_name="crypto_single", run_name="run1", random_initial=False):
+                 strategy_name="crypto_single", run_name="run1", random_init=RandomInit(random_init=False)):
         self.day = day
         self.df = df
         self.max_days = len(self.df.index.unique())
@@ -50,20 +51,11 @@ class CustomTradingEnv(gym.Env):
         self.turbulence_threshold = turbulence_threshold
         self.risk_indicator_col = risk_indicator_col
         self.initial = initial
-        self.random_initial = random_initial
+        self.random_init = random_init
         self.previous_state = previous_state
         self.model_name = model_name
         self.mode = mode
         self.iteration = iteration
-        # initalize state
-        self.state = self._initiate_state()
-        self.root_dir = root_dir
-        self.strategy_name = strategy_name
-        self.run_name = run_name
-        self.main_path = f"{self.root_dir}/results/{self.strategy_name}"
-        self.run_path = f"{self.main_path}/{self.model_name}/{self.run_name}"
-
-        # initialize reward
         self.reward = 0
         self.turbulence = 0
         self.cost = 0
@@ -71,8 +63,13 @@ class CustomTradingEnv(gym.Env):
         self.missed_trades = 0
         self.episode = 0
 
-        # memorize all the total balance change
-        # the initial total asset is calculated by cash + sum (num_share_stock_i * price_stock_i)
+        self.state = self._initiate_state()
+        self.root_dir = root_dir
+        self.strategy_name = strategy_name
+        self.run_name = run_name
+        self.main_path = f"{self.root_dir}/results/{self.strategy_name}"
+        self.run_path = f"{self.main_path}/{self.model_name}/{self.run_name}"
+
         self.asset_memory_buffer_size = len(self.df.date.unique())
         self.empty_asset_buffer = [0] * self.asset_memory_buffer_size
         self.asset_memory = self.empty_asset_buffer
@@ -327,6 +324,16 @@ class CustomTradingEnv(gym.Env):
     def reset(self):
         self.day = 0
         self.data = self.df.loc[self.day, :]  # has to be reset before _initiate_state()
+        self.turbulence = 0
+        self.cost = 0
+        self.trades = 0
+        self.missed_trades = 0
+        self.terminal = False
+        self.episode += 1
+        # self.iteration=self.iteration
+        self.rewards_memory = []
+        self.actions_memory = []
+        self.state_memory = []
 
         # initiate state
         self.state = self._initiate_state()
@@ -340,18 +347,6 @@ class CustomTradingEnv(gym.Env):
             previous_asset_amounts = np.array(self.previous_state[(self.stock_dim + 1): (self.stock_dim * 2 + 1)])
             previous_total_asset = self.previous_state[0] + sum(asset_prices * previous_asset_amounts)
             self.asset_memory[0] = previous_total_asset
-
-        self.turbulence = 0
-        self.cost = 0
-        self.trades = 0
-        self.missed_trades = 0
-        self.terminal = False
-        # self.iteration=self.iteration
-        self.rewards_memory = []
-        self.actions_memory = []
-        self.state_memory = []
-
-        self.episode += 1
 
         normalized_state = self.env_normalizer.get_normalized_state(self.day, self.state)
         return normalized_state
@@ -374,7 +369,7 @@ class CustomTradingEnv(gym.Env):
             # For Initial State
             if len(self.df.tic.unique()) > 1:
                 # for multiple stock
-                if self.random_initial:
+                if self.random_init.use_random_init(self.episode):
                     self.random_initial_amount = self.get_random_start_values()
                     state = (
                             [self.random_initial_amount[0]]
@@ -456,7 +451,7 @@ class CustomTradingEnv(gym.Env):
     def save_state_memory(self):
         state_memory = pd.DataFrame(self.state_memory)
         state_memory.index = self.date_memory[:-1]
-        if self.random_initial:
+        if self.random_init.use_random_init(self.episode):
             init_state = pd.DataFrame([[self.random_initial_amount[0]] + self.df.loc[
                 0].close.tolist() + self.random_initial_amount[1:self.stock_dim + 1]])
         else:
