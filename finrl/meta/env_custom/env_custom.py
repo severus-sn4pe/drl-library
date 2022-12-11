@@ -55,6 +55,7 @@ class CustomTradingEnv(gym.Env):
         self.previous_state = previous_state
         self.model_name = model_name
         self.mode = mode
+        self.random_init.mode = mode
         self.iteration = iteration
         self.reward = 0
         self.turbulence = 0
@@ -62,6 +63,14 @@ class CustomTradingEnv(gym.Env):
         self.trades = 0
         self.missed_trades = 0
         self.episode = 0
+
+        self.stats_buffer = {
+            'trades': 0,
+            'missed_trades': 0,
+            'sharpe': 0,
+            'sortino': 0,
+            'ep_reward': 0
+        }
 
         self.state = self._initiate_state()
         self.root_dir = root_dir
@@ -240,6 +249,14 @@ class CustomTradingEnv(gym.Env):
                 'sharpe': sharpe,
                 'sortino': sortino,
                 'missed_trades': self.missed_trades
+            }
+
+            self.stats_buffer = {
+                'trades': self.trades,
+                'missed_trades': self.missed_trades,
+                'sharpe': sharpe,
+                'sortino': sortino,
+                'ep_reward': tot_reward
             }
 
             if not self.episode % self.print_verbosity:

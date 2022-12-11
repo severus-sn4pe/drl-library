@@ -6,12 +6,15 @@ class RandomInit:
         self.mod = int(mod) if mod else False
         self.start = int(start) if start else False
         self.end = int(end) if end else False
+        self.mode = "train"
         if self.random_initialization and not self.always_random:
             assert type(self.mod) == int, "mod is not a number"
             assert type(self.start) == int, "start is not a number"
             assert type(self.end) == int, "end is not a number"
 
     def use_random_init(self, episode):
+        if self.mode == "test":
+            return False
         if not self.random_initialization:
             return False
         if self.always_random:

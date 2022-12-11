@@ -71,13 +71,13 @@ def get_test_env(df, env_kwargs, turb_thres=None) -> CustomTradingEnv:
     return CustomTradingEnv(df=df, turbulence_threshold=turb_thres, **kwargs)
 
 
-def load_model_from_file(model_name, filename, tensorboard_log):
+def load_model_from_file(model_name, filename, tensorboard_log, device='cpu'):
     model_file_exists = os.path.isfile(f"{filename}.zip")
     if not model_file_exists:
         raise ValueError("NoModelFileAvailableError")
 
     model_type = MODELS[model_name]
-    loaded_model = model_type.load(f"{filename}.zip", tensorboard_log=tensorboard_log)
+    loaded_model = model_type.load(f"{filename}.zip", tensorboard_log=tensorboard_log, device=device)
     print(f"loaded model from {filename}")
     return loaded_model
 
@@ -99,15 +99,19 @@ def get_model_params(model_name):
     return params
 
 
-def train(df, env_kwargs, settings):
+def train(df, env_kwargs, settings, do_eval=False, df_test=None):
     env = get_train_env(df, env_kwargs)
     agent = DRLAgent(env=env)
+    eval_env = None
+    if do_eval:
+        eval_env = get_test_env(df_test, env_kwargs)
 
     if settings['retrain_existing_model']:
         print(f"Loading existing model from {settings['previous_model_name']}")
         model = load_model_from_file(env_kwargs['model_name'],
                                      settings['previous_model_name'],
-                                     settings['tensorboard_log'])
+                                     settings['tensorboard_log'],
+                                     settings['model_params']['device'])
         model.set_env(env)
     else:
         # initialize new model
@@ -116,7 +120,10 @@ def train(df, env_kwargs, settings):
                                 tensorboard_log=settings['tensorboard_log'])
 
     start = time.time()
-    trained_model = agent.train_model(model=model, tb_log_name=f"{env_kwargs['model_name']}_{env_kwargs['run_name']}",
+    trained_model = agent.train_model(model=model,
+                                      eval_env=eval_env,
+                                      eval_during_train=do_eval,
+                                      tb_log_name=f"{env_kwargs['model_name']}_{env_kwargs['run_name']}",
                                       total_timesteps=settings['total_timesteps'])
     log_duration(start)
 
@@ -131,7 +138,8 @@ def test(df, env_kwargs, settings):
     env = get_test_env(df, env_kwargs)
     model = load_model_from_file(env_kwargs['model_name'],
                                  settings['target_model_filename'],
-                                 settings['tensorboard_log'])
+                                 settings['tensorboard_log'],
+                                 settings['model_params']['device'])
 
     start = time.time()
     df_state, df_actions = DRLAgent.DRL_prediction(model=model, environment=env)
