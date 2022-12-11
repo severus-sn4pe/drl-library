@@ -26,13 +26,13 @@ class TensorboardCallback(BaseCallback):
                 total_reward = end_money - start_money
 
                 sharpe, sortino = env.get_sharpe_sortino()
-
                 self.logger.record(key="my-stats/episode", value=env.episode)
                 self.logger.record(key="my-stats/episode-reward", value=total_reward)
-                self.logger.record(key="my-stats/trades", value=env.trades)
-                self.logger.record(key="my-stats/missed_trades", value=env.missed_trades)
                 self.logger.record(key="my-stats/sharpe", value=sharpe)
                 self.logger.record(key="my-stats/sortino", value=sortino)
+                self.logger.record(key="my-stats/trades", value=env.trades)
+                self.logger.record(key="my-stats/missed_trades", value=env.missed_trades)
+
             self.logger.record(key="train/reward", value=self.locals["rewards"][0])
         except BaseException:
             self.logger.record(key="train/reward", value=self.locals["reward"][0])

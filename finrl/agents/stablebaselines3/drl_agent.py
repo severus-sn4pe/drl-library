@@ -3,9 +3,13 @@ from __future__ import annotations
 
 import numpy as np
 from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.env_util import is_wrapped
+from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.vec_env import DummyVecEnv
 
 from finrl.agents.stablebaselines3.models import MODELS, MODEL_KWARGS, NOISE
 from finrl.agents.stablebaselines3.tensorboard_callback import TensorboardCallback
+from finrl.meta.env_custom.custom_eval_callback import CustomEvalCallback
 
 
 class DRLAgent:
@@ -54,17 +58,36 @@ class DRLAgent:
             **model_kwargs,
         )
 
-    def train_model(self, model, tb_log_name, total_timesteps=5000):
+    def train_model(self, model, tb_log_name, total_timesteps=5000,
+                    eval_during_train=False, eval_env=None):
+        callbacks = [TensorboardCallback()]
         checkpoint_callback = CheckpointCallback(
             save_freq=200_000,
             save_path='./trained_models/model_checkpoints/',
             name_prefix=tb_log_name,
             verbose=1
         )
+        callbacks.append(checkpoint_callback)
+
+        if eval_during_train:
+            if not is_wrapped(eval_env, Monitor):
+                eval_env = Monitor(eval_env)
+            eval_env = DummyVecEnv([lambda: eval_env])
+
+            eval_callback = CustomEvalCallback(
+                eval_env,
+                best_model_save_path=f'eval_log/{tb_log_name}',
+                log_path=f'eval_log/{tb_log_name}',
+                eval_freq=379 * 100,
+                n_eval_episodes=1,
+                deterministic=True
+            )
+            callbacks.append(eval_callback)
+
         model = model.learn(
             total_timesteps=total_timesteps,
             tb_log_name=tb_log_name,
-            callback=[TensorboardCallback(), checkpoint_callback],
+            callback=callbacks,
         )
         return model
 

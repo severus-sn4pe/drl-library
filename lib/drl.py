@@ -99,9 +99,12 @@ def get_model_params(model_name):
     return params
 
 
-def train(df, env_kwargs, settings):
+def train(df, env_kwargs, settings, do_eval=False, df_test=None):
     env = get_train_env(df, env_kwargs)
     agent = DRLAgent(env=env)
+    eval_env = None
+    if do_eval:
+        eval_env = get_test_env(df_test, env_kwargs)
 
     if settings['retrain_existing_model']:
         print(f"Loading existing model from {settings['previous_model_name']}")
@@ -117,7 +120,10 @@ def train(df, env_kwargs, settings):
                                 tensorboard_log=settings['tensorboard_log'])
 
     start = time.time()
-    trained_model = agent.train_model(model=model, tb_log_name=f"{env_kwargs['model_name']}_{env_kwargs['run_name']}",
+    trained_model = agent.train_model(model=model,
+                                      eval_env=eval_env,
+                                      eval_during_train=do_eval,
+                                      tb_log_name=f"{env_kwargs['model_name']}_{env_kwargs['run_name']}",
                                       total_timesteps=settings['total_timesteps'])
     log_duration(start)
 
