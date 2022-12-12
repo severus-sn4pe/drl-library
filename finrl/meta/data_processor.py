@@ -3,29 +3,13 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from finrl.meta.data_processors.processor_alpaca import AlpacaProcessor as Alpaca
 from finrl.meta.data_processors.processor_file import FileProcessor
-from finrl.meta.data_processors.processor_wrds import WrdsProcessor as Wrds
-from finrl.meta.data_processors.processor_yahoofinance import (YahooFinanceProcessor as YahooFinance)
 
 
 class DataProcessor:
     def __init__(self, data_source, **kwargs):
         self.tech_indicator_list = pd.DataFrame()
-        if data_source == "alpaca":
-            try:
-                API_KEY = kwargs.get("API_KEY")
-                API_SECRET = kwargs.get("API_SECRET")
-                API_BASE_URL = kwargs.get("API_BASE_URL")
-                self.processor = Alpaca(API_KEY, API_SECRET, API_BASE_URL)
-                print("Alpaca successfully connected")
-            except BaseException:
-                raise ValueError("Please input correct account info for alpaca!")
-        elif data_source == "wrds":
-            self.processor = Wrds()
-        elif data_source == "yahoofinance":
-            self.processor = YahooFinance()
-        elif data_source == "file":
+        if data_source == "file":
             self.processor = FileProcessor(kwargs.get("filename"))
         else:
             raise ValueError("Data source input is NOT supported yet.")

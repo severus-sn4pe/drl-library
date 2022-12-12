@@ -27,4 +27,4 @@ stockstats>=0.4.0
 tensorboardX
 wheel>=0.33.6
 # wrds
-# yfinance
+yfinance

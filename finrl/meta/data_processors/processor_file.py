@@ -2,12 +2,9 @@ from __future__ import annotations
 
 import itertools
 
-import exchange_calendars as tc
 import numpy as np
 import pandas as pd
 from stockstats import StockDataFrame as Sdf
-
-from finrl.meta.data_processors.processor_yahoofinance import (YahooFinanceProcessor as YahooFinance)
 
 
 class FileProcessor:
@@ -166,16 +163,8 @@ class FileProcessor:
         return turbulence_index
 
     def add_vix(self, data):
-        print(f"Adding vix")
-        df = data.copy()
-        yahoo_dp = YahooFinance()
-        df_vix = yahoo_dp.download_data(start_date=df.date.min(), end_date=df.date.max(),
-                                        ticker_list=["^VIX"], time_interval='1d')
-        vix = df_vix[["date", "close"]]
-        vix.columns = ["date", "vix"]
-        df = df.merge(vix, on="date")
-        df = df.sort_values(["date", "tic"]).reset_index(drop=True)
-        return df
+        print(f"vix is currently not supported")
+        return data
 
     def df_to_array(self, df, tech_indicator_list, if_vix):
         """transform final df to numpy arrays"""
@@ -199,17 +188,3 @@ class FileProcessor:
         assert tech_array.shape[0] == turbulence_array.shape[0]
         print("Successfully transformed into array")
         return price_array, tech_array, turbulence_array
-
-    def get_trading_days(self, start, end):
-        nyse = tc.get_calendar("NYSE")
-        df = nyse.sessions_in_range(
-            # pd.Timestamp(start, tz=pytz.UTC), pd.Timestamp(end, tz=pytz.UTC)
-            pd.Timestamp(start),
-            pd.Timestamp(end),
-            # bug fix:ValueError: Parameter `start` received with timezone defined as 'UTC' although a Date must be timezone naive.
-        )
-        trading_days = []
-        for day in df:
-            trading_days.append(str(day)[:10])
-
-        return trading_days
