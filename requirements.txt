@@ -1,7 +1,7 @@
-ccxt==1.66.32  # make sure that >=1.66.32
-
-alpaca-trade-api
-exchange_calendars
+# ccxt==1.66.32  # make sure that >=1.66.32
+# alpaca-trade-api
+# exchange_calendars
+cloudpickle==2.1.0
 gputil
 gym>=0.17
 lz4
@@ -26,5 +26,5 @@ stable-baselines3[extra]
 stockstats>=0.4.0
 tensorboardX
 wheel>=0.33.6
-wrds
-yfinance
+# wrds
+# yfinance
