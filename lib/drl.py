@@ -1,16 +1,16 @@
 import os
 import time
 
-from finrl.agents.stablebaselines3.drl_agent import DRLAgent
-from finrl.meta.data_processor import DataProcessor
-from finrl.meta.env_custom.env_custom import CustomTradingEnv
-
 from stable_baselines3 import A2C
 from stable_baselines3 import DDPG
 from stable_baselines3 import PPO
 from stable_baselines3 import SAC
 from stable_baselines3 import TD3
 
+import config.crypto as crypto
+from finrl.agents.stablebaselines3.drl_agent import DRLAgent
+from finrl.meta.data_processor import DataProcessor
+from finrl.meta.env_custom.env_custom import CustomTradingEnv
 from lib.support import log_duration
 
 MODELS = {"A2C": A2C, "DDPG": DDPG, "TD3": TD3, "SAC": SAC, "PPO": PPO}
@@ -60,6 +60,7 @@ def generate_yahoo_dataset(name, ticker_list, start_date, end_date, folder='data
 
 def get_train_env(df, env_kwargs) -> CustomTradingEnv:
     kwargs = env_kwargs.copy()
+    kwargs['mode'] = 'train'
     e_train_gym = CustomTradingEnv(df=df, **kwargs)
     env, _ = e_train_gym.get_sb_env()
     return env
@@ -74,7 +75,7 @@ def get_test_env(df, env_kwargs, turb_thres=None) -> CustomTradingEnv:
 def load_model_from_file(model_name, filename, tensorboard_log, device='cpu'):
     model_file_exists = os.path.isfile(f"{filename}.zip")
     if not model_file_exists:
-        raise ValueError("NoModelFileAvailableError")
+        raise ValueError(f"NoModelFileAvailableError for {filename}")
 
     model_type = MODELS[model_name]
     loaded_model = model_type.load(f"{filename}.zip", tensorboard_log=tensorboard_log, device=device)
@@ -82,21 +83,13 @@ def load_model_from_file(model_name, filename, tensorboard_log, device='cpu'):
     return loaded_model
 
 
-def get_model_params(model_name):
-    params = {}
-    if model_name == "A2C":
-        params = {"n_steps": 5, "ent_coef": 0.01, "learning_rate": 0.007}
-    if model_name == "DDPG":
-        params = {"batch_size": 128, "buffer_size": 50000, "learning_rate": 0.001}
-    if model_name == "PPO":
-        params = {"n_steps": 2048, "ent_coef": 0.01, "learning_rate": 0.00025, "batch_size": 128}
-    if model_name == "TD3":
-        params = {"batch_size": 100, "buffer_size": 1_000_000, "learning_rate": 0.001}
-    if model_name == "SAC":
-        params = {
-            "batch_size": 128, "buffer_size": 100_000,
-            "learning_rate": 0.0001, "learning_starts": 100, "ent_coef": "auto_0.1"}
-    return params
+def get_model_params(model_name, run_config):
+    if model_name in crypto.MODEL_PARAMS:
+        if run_config in crypto.MODEL_PARAMS[model_name]:
+            return crypto.MODEL_PARAMS[model_name][run_config]
+        print(f"settings for config {run_config} not found - returning default settings for {model_name}")
+        return crypto.MODEL_PARAMS[model_name]['default']
+    raise ValueError(f"settings for model {model_name} not found")
 
 
 def train(df, env_kwargs, settings, do_eval=False, df_test=None):

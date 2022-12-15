@@ -3,7 +3,7 @@ import pandas as pd
 from config import crypto
 from config import general as config
 from finrl.meta.env_custom.random_init import RandomInit
-from lib.drl import data_split, train, test
+from lib.drl import data_split, train, test, get_model_params
 from lib.support import check_run_directory_structure, get_run_timestamp
 
 # global settings
@@ -48,13 +48,14 @@ ENV_KWARGS = {
 
 # Settings
 MODEL_NAME = "A2C"
-model_params = {"n_steps": 16, "ent_coef": 1e-5, "learning_rate": 1e-3, "device": "cpu"}  # get_model_params(MODEL_NAME)
-RUN_CONFIG = "V01"
+RUN_CONFIG = "V212"
+model_params = get_model_params(MODEL_NAME, RUN_CONFIG)
+
 RUN_NAME = f"{RUN_CONFIG}_{get_run_timestamp()}_demo"
 
 ENV_KWARGS['run_name'] = RUN_NAME
 ENV_KWARGS['model_name'] = MODEL_NAME
-# ENV_KWARGS['random_init'] = RandomInit(random_init=True, always=False, mod=500, start=100, end=300)
+ENV_KWARGS['random_init'] = RandomInit(random_init=True, always=False, mod=500, start=100, end=300)
 
 timesteps = 2_000_000
 
@@ -80,8 +81,7 @@ settings = {
 }
 
 # ===== TRAIN
-trained = train(train_df, ENV_KWARGS, settings,
-                df_test=test_df, do_eval=True)
+trained = train(train_df, ENV_KWARGS, settings, df_test=test_df, do_eval=True)
 
 # ===== TEST
 test(test_df, ENV_KWARGS, settings)
