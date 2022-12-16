@@ -1,7 +1,7 @@
-ccxt==1.66.32  # make sure that >=1.66.32
-
-alpaca-trade-api
-exchange_calendars
+# ccxt==1.66.32  # make sure that >=1.66.32
+# alpaca-trade-api
+# exchange_calendars
+cloudpickle==2.1.0
 gputil
 gym>=0.17
 lz4
@@ -15,6 +15,11 @@ pandas>=1.1.5
 pytest
 ray[default]
 ray[tune]
+jupyterlab
+ipywidgets
+jupyterlab_widgets
+
+plotly==5.6.0
 
 # Model Building Requirements
 scikit-learn>=0.21.0
@@ -25,6 +30,7 @@ setuptools==59.5.0
 stable-baselines3[extra]
 stockstats>=0.4.0
 tensorboardX
+tbparse
 wheel>=0.33.6
-wrds
+# wrds
 yfinance

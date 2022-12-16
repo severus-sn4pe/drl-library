@@ -10,7 +10,17 @@ in finance.
 See [github.com/ AI4Finance-Foundation/FinRL](https://github.com/AI4Finance-Foundation/FinRL). 
 
 ## Installation
-*todo*
+* run ``pip install -r requirements.txt`` to install all dependencies
+
+```
+ensure proper plotly install for successful rendering within jupyterlab
+conda install -c conda-forge nodejs
+jupyter labextension install jupyterlab-plotly
+```
+
+to install cuda support run ``conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia``
+and check with ``torch.cuda.is_available()`` for successfull install
+
 
 ## Documentation
 *todo*

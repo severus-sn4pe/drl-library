@@ -24,3 +24,9 @@ scripts/data_exploration/plots_performance/
 logs_parsed/
 eval_log/
 scripts/temp_eval_plot.ipynb
+
+
+scripts/utils/data/*.zip
+scripts/utils/backport_pickle.ipynb
+
+plots/
