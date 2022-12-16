@@ -28,3 +28,5 @@ scripts/temp_eval_plot.ipynb
 
 scripts/utils/data/*.zip
 scripts/utils/backport_pickle.ipynb
+
+plots/
