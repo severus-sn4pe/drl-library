@@ -30,3 +30,5 @@ scripts/utils/data/*.zip
 scripts/utils/backport_pickle.ipynb
 
 plots/
+
+config/notification_settings.py

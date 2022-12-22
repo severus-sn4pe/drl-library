@@ -67,6 +67,8 @@ MODEL_PARAMS = {
         "V210": {"batch_size": 32, "buffer_size": 50_000, "learning_rate": 0.01, "tau": 0.05, "device": "cuda"},
         "V211": {"batch_size": 128, "buffer_size": 50_000, "learning_rate": 0.01, "tau": 0.05, "device": "cuda"},
         "V212": {"batch_size": 1024, "buffer_size": 50_000, "learning_rate": 0.01, "tau": 0.05, "device": "cuda"},
+        "V213": {"batch_size": 2048, "buffer_size": 50_000, "learning_rate": 0.001, "tau": 0.005, "device": "cuda"},
+        "V214": {"batch_size": 2048, "buffer_size": 50_000, "learning_rate": 0.001, "tau": 0.05, "device": "cuda"},
     },
     "DDPG": {
         "default": {"batch_size": 128, "buffer_size": 50000, "learning_rate": 0.001, "device": "cpu"}

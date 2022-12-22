@@ -34,3 +34,6 @@ tbparse
 wheel>=0.33.6
 # wrds
 yfinance
+
+# logging
+discord-webhook

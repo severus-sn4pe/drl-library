@@ -11,7 +11,7 @@ import config.crypto as crypto
 from finrl.agents.stablebaselines3.drl_agent import DRLAgent
 from finrl.meta.data_processor import DataProcessor
 from finrl.meta.env_custom.env_custom import CustomTradingEnv
-from lib.support import log_duration
+from lib.logger import log_start, log_finished
 
 MODELS = {"A2C": A2C, "DDPG": DDPG, "TD3": TD3, "SAC": SAC, "PPO": PPO}
 
@@ -113,18 +113,23 @@ def train(df, env_kwargs, settings, do_eval=False, df_test=None):
                                 tensorboard_log=settings['tensorboard_log'])
 
     start = time.time()
-    trained_model = agent.train_model(model=model,
-                                      eval_env=eval_env,
-                                      eval_during_train=do_eval,
-                                      tb_log_name=f"{env_kwargs['model_name']}_{env_kwargs['run_name']}",
-                                      total_timesteps=settings['total_timesteps'])
-    log_duration(start)
+    log_start(settings, env_kwargs, df)
 
-    if settings['save_model']:
-        print(f"Storing model in {settings['target_model_filename']}")
-        trained_model.save(settings['target_model_filename'])
+    try:
+        trained_model = agent.train_model(model=model,
+                                          eval_env=eval_env,
+                                          eval_during_train=do_eval,
+                                          tb_log_name=f"{env_kwargs['model_name']}_{env_kwargs['run_name']}",
+                                          total_timesteps=settings['total_timesteps'])
+        if settings['save_model']:
+            print(f"Storing model in {settings['target_model_filename']}")
+            trained_model.save(settings['target_model_filename'])
 
-    return trained_model
+        log_finished(True, start, settings, env_kwargs, df)
+        return trained_model
+    except Exception as e:
+        print("ERROR", type(e).__name__, e)
+        log_finished(False, start, settings, env_kwargs, df, e)
 
 
 def test(df, env_kwargs, settings):
