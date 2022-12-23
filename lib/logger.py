@@ -49,6 +49,11 @@ def log_duration(duration):
     print(f"{get_time()}: finished in {duration}")
 
 
+def log_duration_from_start(start_time):
+    duration_string = get_duration(time.time() - start_time)
+    log_duration(duration_string)
+
+
 def get_duration(duration):
     m, s = divmod(duration, 60)
     h, m = divmod(m, 60)
