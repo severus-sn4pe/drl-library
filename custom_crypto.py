@@ -4,7 +4,7 @@ from finrl.meta.env_cryptocurrency_trading.env_multiple_crypto import CryptoEnv
 from finrl.meta.env_custom.env_custom import CustomTradingEnv
 from lib.drl import load_dataset, data_split
 from lib.stocks_strategy import StocksStrategy
-from lib.support import check_directory_structure, get_time, get_duration, log_duration
+from lib.support import check_directory_structure
 # from finrl.agents.elegantrl.elegantrl_models import DRLAgent as DRLAgent_erl
 from stable_baselines3 import A2C
 from stable_baselines3 import DDPG
