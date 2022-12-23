@@ -59,7 +59,7 @@ class DRLAgent:
         )
 
     def train_model(self, model, tb_log_name, total_timesteps=5000,
-                    eval_during_train=False, eval_env=None):
+                    eval_during_train=False, eval_env=None, episode_size=379):
         callbacks = [TensorboardCallback()]
         checkpoint_callback = CheckpointCallback(
             save_freq=200_000,
@@ -78,7 +78,7 @@ class DRLAgent:
                 eval_env,
                 best_model_save_path=f'eval_log/{tb_log_name}',
                 log_path=f'eval_log/{tb_log_name}',
-                eval_freq=379 * 100,
+                eval_freq=episode_size * 100,
                 n_eval_episodes=1,
                 deterministic=True
             )

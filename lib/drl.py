@@ -11,7 +11,7 @@ import config.crypto as crypto
 from finrl.agents.stablebaselines3.drl_agent import DRLAgent
 from finrl.meta.data_processor import DataProcessor
 from finrl.meta.env_custom.env_custom import CustomTradingEnv
-from lib.logger import log_start, log_finished
+from lib.logger import log_start, log_finished, get_df_type, log_duration_from_start
 
 MODELS = {"A2C": A2C, "DDPG": DDPG, "TD3": TD3, "SAC": SAC, "PPO": PPO}
 
@@ -92,9 +92,19 @@ def get_model_params(model_name, run_config):
     raise ValueError(f"settings for model {model_name} not found")
 
 
+def get_episode_size(df):
+    stock_size = len(df['tic'].unique())
+    df_size = df.shape[0]
+    episode_size = int(df_size / stock_size)
+    df_type = get_df_type(df)
+    print(f"Dataset={df_type} EpisodeSize={episode_size}")
+    return episode_size
+
+
 def train(df, env_kwargs, settings, do_eval=False, df_test=None):
     env = get_train_env(df, env_kwargs)
     agent = DRLAgent(env=env)
+    episode_size = get_episode_size(df)
     eval_env = None
     if do_eval:
         eval_env = get_test_env(df_test, env_kwargs)
@@ -120,7 +130,8 @@ def train(df, env_kwargs, settings, do_eval=False, df_test=None):
                                           eval_env=eval_env,
                                           eval_during_train=do_eval,
                                           tb_log_name=f"{env_kwargs['model_name']}_{env_kwargs['run_name']}",
-                                          total_timesteps=settings['total_timesteps'])
+                                          total_timesteps=settings['total_timesteps'],
+                                          episode_size=episode_size)
         if settings['save_model']:
             print(f"Storing model in {settings['target_model_filename']}")
             trained_model.save(settings['target_model_filename'])
@@ -141,7 +152,7 @@ def test(df, env_kwargs, settings):
 
     start = time.time()
     df_state, df_actions = DRLAgent.DRL_prediction(model=model, environment=env)
-    log_duration(start)
+    log_duration_from_start(start)
 
     df_state.to_csv(f"{settings['file_prefix']}_state.csv")
     df_actions.to_csv(f"{settings['file_prefix']}_actions.csv")
