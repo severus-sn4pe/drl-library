@@ -264,7 +264,8 @@ class CustomTradingEnv(gym.Env):
                     self._make_plot()
 
                 stats_df = pd.DataFrame([stats])
-                stats_df.to_csv(f"{self.main_path}/episode_stats.csv", header=False, index=False, mode='a')
+                # uncomment to log episode stats
+                # stats_df.to_csv(f"{self.main_path}/episode_stats.csv", header=False, index=False, mode='a')
 
                 print(f"day: {self.day}, episode: {self.episode}")
                 print(f"begin_total_asset: {self.asset_memory[0]:0.2f}")
@@ -287,10 +288,6 @@ class CustomTradingEnv(gym.Env):
         else:
             actions_unscaled = actions
             actions = actions * self._get_action_normalizer()
-
-            if self.turbulence_threshold is not None:
-                if self.turbulence >= self.turbulence_threshold:
-                    actions = np.array([-self.hmax] * self.stock_dim)
 
             begin_total_asset = self.state[0] + sum(
                 np.array(self.state[1: (self.stock_dim + 1)])

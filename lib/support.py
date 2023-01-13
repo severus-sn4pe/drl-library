@@ -27,4 +27,4 @@ def check_run_directory_structure(root_dir, results_dir='results', strat_name=No
 
 
 def get_run_timestamp():
-    return datetime.now().strftime("%m%d%H%M")
+    return datetime.now().strftime("%y%m%d%H%M")
