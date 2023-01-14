@@ -326,7 +326,7 @@ class CustomTradingEnv(gym.Env):
             )
             self.reward = end_total_asset - begin_total_asset
             self.asset_memory[self.day] = end_total_asset
-            if not self.episode % self.print_verbosity or self.mode == "test":
+            if not self.episode % self.print_verbosity or self.mode in ["test", "validation"]:
                 self.actions_memory.append(np.concatenate([actions, actions_unscaled]))
                 self.rewards_memory.append(self.reward)
                 self.state_memory.append(self.state[0:2 * self.stock_dim + 1])

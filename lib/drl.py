@@ -79,7 +79,7 @@ def load_model_from_file(model_name, filename, tensorboard_log, device='cpu'):
 
     model_type = MODELS[model_name]
     loaded_model = model_type.load(f"{filename}.zip", tensorboard_log=tensorboard_log, device=device)
-    print(f"loaded model from {filename}")
+    # print(f"loaded model from {filename}")
     return loaded_model
 
 

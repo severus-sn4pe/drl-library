@@ -45,13 +45,14 @@ def get_time():
     return now.strftime("%d.%m.%Y %H:%M:%S")
 
 
-def log_duration(duration):
-    print(f"{get_time()}: finished in {duration}")
+def log_duration(duration, name=""):
+    name = f"{name} " if name != "" else ""
+    print(f"{get_time()}: {name}finished in {duration}")
 
 
-def log_duration_from_start(start_time):
+def log_duration_from_start(start_time, name=""):
     duration_string = get_duration(time.time() - start_time)
-    log_duration(duration_string)
+    log_duration(duration_string, name)
 
 
 def get_duration(duration):
@@ -75,14 +76,14 @@ def get_embedding(title, description, color, strategy, df_type, run_cfg, device,
     return embed
 
 
-def log_start(settings, env_kwargs, df):
+def log_start(settings, env_kwargs, df, send_discord=True):
     strategy_name = env_kwargs["model_name"]
     run_config = env_kwargs['run_name']
     df_type = get_df_type(df)
     device = settings['model_params']['device'] if 'device' in settings['model_params'] else "unknown"
     timesteps = settings["total_timesteps"]
     url = get_webhook_url()
-    if not url:
+    if not url or not send_discord:
         return
 
     webhook = DiscordWebhook(url=url)  # , content=message)
@@ -92,12 +93,12 @@ def log_start(settings, env_kwargs, df):
     webhook.execute()
 
 
-def log_finished(success, start_time, settings, env_kwargs, df, error=None):
+def log_finished(success, start_time, settings, env_kwargs, df, error=None, send_discord=True):
     duration_string = get_duration(time.time() - start_time)
     log_duration(duration_string)
 
     url = get_webhook_url()
-    if not url:
+    if not url or not send_discord:
         return
 
     strategy_name = env_kwargs["model_name"]
