@@ -9,10 +9,8 @@ from lib.support import get_run_timestamp
 ROOT_DIR = '.'
 # check_directory_structure(ROOT_DIR)
 STRATEGY_NAME = "ce"  # Crypto Ensemble Strategy
-RES = "1h"
+RES = "1d"
 RUN_NAME = f"{STRATEGY_NAME}_{RES}_{get_run_timestamp()}"
-print(f"Running {STRATEGY_NAME} with name {RUN_NAME}")
-print(f"=============================================================")
 
 MODEL_DIR = f"{ROOT_DIR}/{config.TRAINED_MODEL_DIR}/{STRATEGY_NAME}"
 TENSORBOARD_DIR = f"./tensorboard_log/{STRATEGY_NAME}"
@@ -26,12 +24,12 @@ MODEL_SETTINGS = {
             "ent_coef": 1e-5,
             "learning_rate": 1e-3,
             "device": "cpu"},
-        # "init_model": "final_trained/A2C_1D_260M",
+        "init_model": "final_trained/A2C_1D_260M",
         # "init_model": "final_trained/A2C_12H_600M",
         # "init_model": "final_trained/A2C_6H_550M",
-        "init_model": "final_trained/A2C_1H_240M",
-        # "timesteps": 75800 * 6
-        "timesteps": 90960
+        # "init_model": "final_trained/A2C_1H_240M",
+        "timesteps": 75800 * 6
+        # "timesteps": 90960
     },
     "PPO": {
         "model_name": "PPO",
@@ -41,12 +39,12 @@ MODEL_SETTINGS = {
             "learning_rate": 0.001,
             "batch_size": 1024,
             "device": "cpu"},
-        # "init_model": "final_trained/PPO_1D_180M",
+        "init_model": "final_trained/PPO_1D_180M",
         # "init_model": "final_trained/PPO_12H_600M",
         # "init_model": "final_trained/PPO_6H_550M",
-        "init_model": "final_trained/PPO_1H_200M",
-        # "timesteps": 75800 * 6
-        "timesteps": 90960
+        # "init_model": "final_trained/PPO_1H_200M",
+        "timesteps": 75800 * 6
+        # "timesteps": 90960
     },
     "TD3": {
         "model_name": "TD3",
@@ -57,12 +55,12 @@ MODEL_SETTINGS = {
             "tau": 0.05,
             "device": "cuda"
         },
-        # "init_model": "final_trained/TD3_1D_18M",
+        "init_model": "final_trained/TD3_1D_18M",
         # "init_model": "final_trained/TD3_12H_54M",
         # "init_model": "final_trained/TD3_6H_54M",
-        "init_model": "final_trained/TD3_1H_42M",
-        # "timesteps": 37900 * 6
-        "timesteps": 45480
+        # "init_model": "final_trained/TD3_1H_42M",
+        "timesteps": 37900 * 6
+        # "timesteps": 45480
     },
 }
 
@@ -103,5 +101,7 @@ AGENT_KWARGS = {
 
 }
 if __name__ == "__main__":
+    print(f"Running {STRATEGY_NAME} with name {RUN_NAME}")
+    print(f"=============================================================")
     ensemble_agent = DRLEnsembleAgent(df=df, **AGENT_KWARGS)
     ensemble_agent.run_ensemble()

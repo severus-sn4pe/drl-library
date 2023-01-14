@@ -15,6 +15,7 @@ notes.txt
 
 crypto_my_version_*.py
 crypto_my_version_*.ipynb
+crypto_my_ensemble_*.py
 scripts/data_exploration/plots/
 
 scripts/data_exploration/plots_coins/
