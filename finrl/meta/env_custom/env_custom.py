@@ -107,14 +107,22 @@ class CustomTradingEnv(gym.Env):
                     sell_num_shares = min(abs(action), self.state[index + self.stock_dim + 1])
                     sell_amount = (self.state[index + 1] * sell_num_shares * (1 - self.sell_cost_pct[index]))
                     # update balance
-                    self.state[0] += sell_amount
 
-                    self.state[index + self.stock_dim + 1] -= sell_num_shares
-                    self.cost += (self.state[index + 1] * sell_num_shares * self.sell_cost_pct[index])
-                    if sell_num_shares > 0:
-                        self.trades += 1
+                    if sell_num_shares > 1e-12:
+                        self.state[0] += sell_amount
+                        if self.state[0] < 1e-12:
+                            self.state[0] = 0
+
+                        self.state[index + self.stock_dim + 1] -= sell_num_shares
+                        if self.state[index + self.stock_dim + 1] < 1e-12:
+                            self.state[index + self.stock_dim + 1] = 0
+                        self.cost += (self.state[index + 1] * sell_num_shares * self.sell_cost_pct[index])
+                        if sell_num_shares > 0:
+                            self.trades += 1
+                        else:
+                            self.missed_trades += 1
                     else:
-                        self.missed_trades += 1
+                        sell_num_shares = 0
                 else:
                     sell_num_shares = 0
             else:
@@ -169,15 +177,21 @@ class CustomTradingEnv(gym.Env):
                 # update balance
                 buy_num_shares = min(available_amount, action)
                 buy_amount = (self.state[index + 1] * buy_num_shares * (1 + self.buy_cost_pct[index]))
-                self.state[0] -= buy_amount
 
-                self.state[index + self.stock_dim + 1] += buy_num_shares
+                if buy_num_shares > 1e-8:
+                    self.state[0] -= buy_amount
+                    if self.state[0] < 1e-8:
+                        self.state[0] = 0
 
-                self.cost += (self.state[index + 1] * buy_num_shares * self.buy_cost_pct[index])
-                if buy_num_shares > 0:
-                    self.trades += 1
+                    self.state[index + self.stock_dim + 1] += buy_num_shares
+
+                    self.cost += (self.state[index + 1] * buy_num_shares * self.buy_cost_pct[index])
+                    if buy_num_shares > 0:
+                        self.trades += 1
+                    else:
+                        self.missed_trades += 1
                 else:
-                    self.missed_trades += 1
+                    buy_num_shares = 0
             else:
                 buy_num_shares = 0
 
@@ -221,7 +235,8 @@ class CustomTradingEnv(gym.Env):
         # sortino
         temp_expectation = np.mean(np.minimum(0, daily_return) ** 2)
         downside_dev = np.sqrt(temp_expectation)
-        sortino = np.mean(daily_return) / downside_dev
+        if downside_dev != 0:
+            sortino = np.mean(daily_return) / downside_dev
 
         return sharpe, sortino
 
