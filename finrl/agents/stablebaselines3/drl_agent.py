@@ -59,15 +59,18 @@ class DRLAgent:
         )
 
     def train_model(self, model, tb_log_name, total_timesteps=5000,
-                    eval_during_train=False, eval_env=None, episode_size=379):
+                    eval_during_train=False, eval_env=None, episode_size=379,
+                    save_checkpoints=True):
         callbacks = [TensorboardCallback()]
-        checkpoint_callback = CheckpointCallback(
-            save_freq=200_000,
-            save_path='./trained_models/model_checkpoints/',
-            name_prefix=tb_log_name,
-            verbose=1
-        )
-        callbacks.append(checkpoint_callback)
+
+        if save_checkpoints:
+            checkpoint_callback = CheckpointCallback(
+                save_freq=200_000,
+                save_path='./trained_models/model_checkpoints/',
+                name_prefix=tb_log_name,
+                verbose=1
+            )
+            callbacks.append(checkpoint_callback)
 
         if eval_during_train:
             if not is_wrapped(eval_env, Monitor):
@@ -84,11 +87,7 @@ class DRLAgent:
             )
             callbacks.append(eval_callback)
 
-        model = model.learn(
-            total_timesteps=total_timesteps,
-            tb_log_name=tb_log_name,
-            callback=callbacks,
-        )
+        model = model.learn(total_timesteps=total_timesteps, tb_log_name=tb_log_name, callback=callbacks)
         return model
 
     @staticmethod
@@ -105,13 +104,10 @@ class DRLAgent:
         test_env.reset()
         for i in range(len(environment.df.index.unique())):
             action, _states = model.predict(test_obs, deterministic=deterministic)
-            # account_memory = test_env.env_method(method_name="save_asset_memory")
-            # actions_memory = test_env.env_method(method_name="save_action_memory")
             test_obs, rewards, dones, info = test_env.step(action)
             if i == (len(environment.df.index.unique()) - 2):
                 state_memory = test_env.env_method(method_name="save_state_memory")
                 actions_memory = test_env.env_method(method_name="save_action_memory")
-            # state_memory=test_env.env_method(method_name="save_state_memory") # add current state to state memory
             if dones[0]:
                 print(f"done in step {i}!")
                 break
