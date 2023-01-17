@@ -48,7 +48,7 @@ ENV_KWARGS = {
 
 # Settings
 MODEL_NAME = "A2C"
-RUN_CONFIG = "V212"
+RUN_CONFIG = "V221"
 model_params = get_model_params(MODEL_NAME, RUN_CONFIG)
 
 RUN_NAME = f"{RUN_CONFIG}_{get_run_timestamp()}_demo"
