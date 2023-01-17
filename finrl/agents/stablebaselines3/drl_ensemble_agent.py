@@ -411,7 +411,8 @@ class DRLEnsembleAgent:
             df_actions_iter = pd.read_csv(f"{filename}")
 
             # add last day for each iteration
-            last_date = (pd.to_datetime(df_actions_iter.iloc[-1]['date']) + timedelta(days=1)).strftime('%Y-%m-%d')
+            last_date = (pd.to_datetime(df_actions_iter.iloc[-1]['date']) + self.get_delta_fix()).strftime(
+                self.get_time_formatter())
             last_row = pd.DataFrame([[last_date] + [0] * self.stock_dim + [-1] * self.stock_dim])
             last_row.columns = df_actions_iter.columns
             df_actions_iter = pd.concat([df_actions_iter, last_row])
@@ -427,6 +428,21 @@ class DRLEnsembleAgent:
         target_filename = f"{self.results_base}/all_actions.csv"
         actions.to_csv(target_filename, index=False)
 
+    def get_delta_fix(self, negative=False):
+        hours = 24
+        if self.res == '6h':
+            hours = 6
+        if self.res == '12h':
+            hours = 12
+        if self.res == '1h':
+            hours = 1
+        if negative:
+            hours *= -1
+        return timedelta(hours=hours)
+
+    def get_time_formatter(self):
+        return "%Y-%m-%d" if self.res == '1d' else "%Y-%m-%d %X"
+
     def concat_state_files(self, winner_models):
         # concat separate state files from each iteration into one file for the whole run
         states = pd.DataFrame()
@@ -436,8 +452,9 @@ class DRLEnsembleAgent:
 
             df_state_iter['date'] = df_state_iter.index
             df_state_iter = df_state_iter.reset_index(drop=True)
-            df_state_iter.loc[0, 'date'] = (pd.to_datetime(df_state_iter.loc[1]['date']) + timedelta(days=-1)).strftime(
-                '%Y-%m-%d')
+            df_state_iter.loc[0, 'date'] = (
+                    pd.to_datetime(df_state_iter.loc[1]['date']) + self.get_delta_fix(negative=True)).strftime(
+                self.get_time_formatter())
             df_state_iter = df_state_iter.set_index('date', drop=True)
             df_state_iter['iteration'] = iteration
             df_state_iter['model'] = winner_models[iteration]
