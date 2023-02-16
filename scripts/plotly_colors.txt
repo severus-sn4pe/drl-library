@@ -34,4 +34,15 @@
     springgreen, steelblue, tan, teal, thistle, tomato,
     turquoise, violet, wheat, white, whitesmoke,
     yellow, yellowgreen
+    
+    
+    other colorsets:
+    
+# colors = ["#e6194b", "#3cb44b", "#0082c8", "#f58231", "#911eb4", "#46f0f0", "#f032e6", "#fabebe", "#008080", 
+#           "#e6beff", "#aa6e28", "#fffac8", "#800000", "#aaffc3", "#808000", "#ffd8b1", "#000080", "#808080", "#ffffff", "#000000", "#ffe119", "#d2f53c", ]
+
+# colors = ["#E84142", "moccasin", "#F7931A", "#BCA033", "#4B4B81", "#335DD2", "#838383", "#FF0100", "green", "#CE54E5"]
+# colors = ["#b30000", "#7c1158", "#4421af", "#1a53ff", "#0d88e6", "#00b7c7", "#5ad45a", "#8be04e", "#ebdc78", "#CE54E5"]
+
+# colors = ["#636EFA", "#AB63FA", "#FF6692", "#FECB52", "#00CC96", "#19D3F3", "#FF97FF", "#EF553B", "#FFA15A", "#B6E880"]
 """

@@ -143,7 +143,7 @@ def train(df, env_kwargs, settings, do_eval=False, df_test=None):
         log_finished(False, start, settings, env_kwargs, df, e)
 
 
-def test(df, env_kwargs, settings):
+def test(df, env_kwargs, settings, deterministic=True):
     env = get_test_env(df, env_kwargs)
     model = load_model_from_file(env_kwargs['model_name'],
                                  settings['target_model_filename'],
@@ -151,7 +151,9 @@ def test(df, env_kwargs, settings):
                                  settings['model_params']['device'])
 
     start = time.time()
-    df_state, df_actions = DRLAgent.DRL_prediction(model=model, environment=env)
+    if not deterministic:
+        print("deterministic = False")
+    df_state, df_actions = DRLAgent.DRL_prediction(model=model, environment=env, deterministic=deterministic)
     log_duration_from_start(start)
 
     df_state.to_csv(f"{settings['file_prefix']}_state.csv")
